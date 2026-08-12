@@ -1,17 +1,25 @@
-/** Entrypoint of the program.
+import scalafx.application.JFXApp3
+import scalafx.scene.Scene
+import scalafx.scene.layout.StackPane
+import scalafx.scene.control.Label
+
+/** A trivial GUI application to test if dependencies have been correctly set.
   */
-object Main:
-  /** The name of the project.
+object GUI extends JFXApp3:
+  /** Describe the GUI there.
     */
-  val projectName: String = "scala3-template"
+  override def start(): Unit =
+    stage = new JFXApp3.PrimaryStage:
+      title = "Multi-Platform ScalaFX"
+      scene = new Scene(400, 300):
+        root = new StackPane:
+          children = new Label("Hello from a Fat Jar on any OS!")
 
-  /** Greet who runs the program.
-    */
-  def greetingMessage: String = s"Welcome to $projectName"
-
-  /** This method is the entry point of the program.
-    * @param args
+/** The launcher of the program.
+  */
+object Launcher:
+  /** @param args
     *   unused
     */
-  def main(args: Array[String]): Unit = println:
-    greetingMessage
+  def main(args: Array[String]): Unit =
+    GUI.main(args)
