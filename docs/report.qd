@@ -26,11 +26,120 @@
 
 ## Descrizione requisiti
 
+**Sentinel** è un sistema di simulazione che consente di modellare e analizzare il comportamento di **magazzini** virtuali gestiti da **flotte di robot autonomi**.
+Per ciascun magazzino l'utente può configurare uno o più _scenari_ operativi, specificando i robot disponibili e l'insieme delle _missioni_ che questi devono portare a termine, oltre alle politiche gestionali che regolano l'assegnazione delle missioni ai robot, il calcolo dei loro percorsi e la risoluzione dei conflitti che possono sorgere fra loro.
+Ogni scenario può essere eseguito attraverso una o più _simulazioni_: al termine di ciascuna, il sistema produce un _report_ con le statistiche sulle prestazioni ottenute, permettendo di confrontare i risultati di configurazioni alternative dello stesso magazzino, così da individuare quella più efficace rispetto agli obiettivi prefissati.
+
+Gli obiettivi principali del sistema sono i seguenti:
+- consentire la definizione di scenari di magazzino personalizzabili in termini di:
+    - flotta di robot e missioni da completare;
+    - diverse politiche configurabili per l'assegnazione delle missioni, per il calcolo dei percorsi dei robot e per la gestione dei conflitti fra essi;
+- simulare l'esecuzione di uno scenario, gestendo nel tempo l'avanzamento delle missioni e degli spostamenti dei robot;
+- produrre, al termine di ogni simulazione, un report con le statistiche di prestazione, per consentire il confronto fra configurazioni differenti dello stesso scenario.
+
 ### Requisiti funzionali
+
+- Il sistema deve permettere di configurare un magazzino come una griglia di celle, distinguendo tra ostacoli, scaffali, celle di percorso (specificando il costo di attraversamento) e zone di carico.
+- Il sistema deve permettere di definire la flotta di robot di uno scenario, specificando per ciascuno la posizione iniziale e la capacità di carico.
+- Il sistema deve permettere di definire le missioni di uno scenario, di tipo spostamento, prelievo o deposito, ciascuna con una propria priorità e scadenza.
+- Il sistema deve assegnare le missioni ai robot secondo la politica configurata per lo scenario (vicinanza, ciclica, carico di lavoro o casuale).
+- Il sistema deve consentire di calcolare i percorsi dei robot minimizzando la metrica prescelta (tempo oppure distanza).
+- Il sistema deve risolvere i conflitti tra robot che competono per la stessa cella, secondo la politica di gestione configurata, combinando un'azione (attesa o ricalcolo) con un criterio di selezione (casuale, priorità o tempo rimanente).
+- Il sistema deve tracciare, durante la simulazione, lo stato di ciascuna missione (in attesa, assegnata, in esecuzione, completata, fallita) e di ciascun robot (in attesa, pronto, in movimento, arrivato).
+- Il sistema deve permettere di specificare un limite massimo di tempo per la simulazione, interrompendone l'esecuzione qualora tale limite venga raggiunto anche in assenza del completamento di tutte le missioni.
+- Al termine della simulazione, il sistema deve produrre un report contenente: numero di missioni completate, tempo totale, distanza totale percorsa, tempo medio e distanza media per missione, robot più utilizzato e robot meno utilizzato.
+- Il sistema deve permettere di poter salvare e caricare il magazzino e gli scenari da eseguire in file esterni, così da poterli riutilizzare in esecuzioni successive.
 
 ### Requisiti non funzionali
 
+<!-- TODO -->
+
 ## Modello del dominio
+
+Il **magazzino** virtuale è modellato come una griglia bidimensionale di _celle_, dove ogni cella rappresenta una porzione discreta di spazio.
+Ogni cella appartiene a una delle seguenti tipologie:
+- _Ostacolo_: celle non attraversabili che rappresentano strutture fisse.
+- _Scaffale_: cella non attraversabile ma interagibile. I robot possono fermarsi presso di essa per prelevare o depositare merce.
+- _Percorso_: cella libera su cui i robot possono transitare.
+- _Zona di carico_: cella di percorso speciale dedicata alle operazioni di carico e scarico merce.
+
+Ogni cella di percorso ha un _costo_ associato, che rappresenta il tempo necessario per attraversarla.
+
+Una **missione** rappresenta un'attività assegnabile ai robot all'interno del magazzino.
+Ogni missione è definita da:
+- _Tipologia_: una missione può essere di tipo:
+    - _spostamento_: il robot deve recarsi verso un punto specifico del magazzino.
+    - _prelievo_: il robot deve prelevare un oggetto da uno scaffale o da una zona di carico.
+    - _deposito_: il robot deve trasportare un oggetto verso uno scaffale o una zona di carico.
+- _Priorità_: un valore numerico, da 1 a 10, che indica l'importanza della missione rispetto alle altre.
+- _Scadenza_: numero di unità temporali di simulazione rimanenti entro cui completare la missione.
+- _Stato_: il ciclo di vita di una missione attraversa questi stati:
+    - _in attesa_ di essere assegnata.
+    - _assegnata_ ad un robot.
+    - _in esecuzione_ da parte del robot.
+    - _completata_ con successo.
+    - _fallita_ perché non completata entro la scadenza.
+
+Un **robot** è un agente mobile autonomo che opera all'interno del magazzino per eseguire missioni. Ogni robot è definito da:
+- _Posizione_: cella del magazzino in cui si trova attualmente.
+- _Capacità di carico_: peso massimo trasportabile, espresso in unità di peso.
+- _Stato_: un robot può trovarsi in uno dei seguenti stati:
+    - _in attesa_ di una nuova missione.
+    - _pronto_ ad eseguire una missione assegnata.
+    - _in movimento_ lungo un percorso.
+    - _arrivato_ a destinazione, pronto per completare la missione.
+
+I robot possono essere dotati di una _coda_ con la quale memorizzare nuove missioni anche mentre ne stanno eseguendo una.
+Al contrario, i robot privi di questa funzione non possono ricevere nuovi compiti finché non completano quello in corso.
+
+Uno **scenario** è una configurazione operativa completa del magazzino e definisce tutti gli elementi necessari per eseguire una simulazione. Ogni scenario specifica:
+
+- l'elenco dei robot presenti, ciascuno con la propria posizione iniziale e capacità di carico;
+- l'insieme delle missioni da completare durante la simulazione.
+- le politiche gestionali che determinano il comportamento del sistema:
+  - assegnazione delle missioni
+  - assegnazione dei percorsi
+  - gestione dei conflitti tra robot
+
+Tra le politiche di assegnazione delle missioni si distinguono:
+- _Vicinanza_: la missione viene assegnata al robot più vicino al punto di origine della missione.
+- _Ciclica_: le missioni vengono assegnate ai robot in ordine ciclico, indipendentemente dalla loro posizione.
+- _Carico di lavoro_: le missioni vengono assegnate al robot con il minor numero di missioni in coda.
+- _Casuale_: le missioni vengono assegnate ad un robot scelto casualmente tra quelli disponibili.
+
+Il sistema offre diverse strategie per il calcolo del percorso ottimale, ciascuna pensata per minimizzare una specifica metrica nel tragitto tra la posizione attuale del robot e la destinazione.
+
+Tra le metriche disponibili si distinguono:
+- Salti: individua il percorso con il minor numero di celle da attraversare, a prescindere dai relativi costi.
+- Tempo: individua il percorso più rapido considerando i costi di attraversamento delle singole celle.
+
+Infine, si distinguono le diverse politiche di gestione dei conflitti tra robot.
+I conflitti si verificano quando due o più robot competono per la stessa cella. Ogni politica di gestione specifica come risolverli, combinando un'azione con un criterio di selezione.
+
+Azioni:
+- Attesa: uno dei robot coinvolti si ferma e attende che l'altro liberi la cella.
+- Ricalcolo: uno dei robot coinvolti ricalcola il proprio percorso trattando la cella di conflitto come un ostacolo temporaneo.
+
+Criteri di selezione:
+- Casuale: il robot che cede è scelto casualmente.
+- Priorità: cede il robot con priorità più bassa.
+- Tempo rimanente: cede il robot con più tempo rimanente per completare la missione.
+
+Per **simulazione** si intende una particolare esecuzione di uno scenario.
+In genere, una simulazione termina quando tutte le missioni sono state completate.
+È possibile, tuttavia, specificare il limite massimo di tempo, causando l'interruzione prematura dell'esecuzione.
+
+A fine della simulazione, il sistema produce le statistiche sulle prestazioni dello scenario, includendo:
+
+- Numero di _missioni completate_
+- _Tempo totale_
+- _Distanza totale_ percorsa
+- _Tempo medio_ per missione
+- _Distanza media_ per missione
+- Robot _più utilizzato_
+- Robot _meno utilizzato_
+
+
 
 <!-- Chapter: Design  -->
 .align {end} 
