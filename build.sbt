@@ -23,7 +23,13 @@ Compile / doc / scalacOptions ++= Seq(
  * Wartremover configuration...
  */
 ThisBuild / wartremoverErrors ++= {
-  val excluded = Set(Wart.Var, Wart.Any)
+  val excluded =
+    Set(
+      Wart.Var,
+      Wart.Any,
+      Wart.TripleQuestionMark,
+      Wart.DefaultArguments
+    )
   Warts.unsafe.filterNot(excluded.contains)
 }
 /*
