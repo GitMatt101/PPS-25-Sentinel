@@ -12,10 +12,10 @@ object GUI extends JFXApp3:
     */
   override def start(): Unit =
     stage = new JFXApp3.PrimaryStage:
-      title = "Multi-Platform ScalaFX"
+      title = "Sentinel"
       scene = new Scene(400, 300):
         root = new StackPane:
-          children = new Label("Hello from a Fat Jar on any OS!")
+          children = new Label("Hello from Sentinel")
 
 /** The launcher of the program.
   */
