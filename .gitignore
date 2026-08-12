@@ -1,0 +1,10 @@
+# IDE
+.idea/
+.vscode/
+.bloop/
+.metals/
+metals.sbt
+# Build
+.bsp/
+target/
+quarkdown-output

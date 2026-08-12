@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          cache: "sbt"
+
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+
+      - name: Setup quarkdown
+        uses: quarkdown-labs/setup-quarkdown@v1
+
+      - name: Bump version and push tag
+        id: tag_bump
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          release_branches: main
+
+      - name: Update and commit build.sbt version
+        if: steps.tag_bump.outputs.new_tag != ''
+        run: |
+          sed -i "s/^ThisBuild \/ version := .*/ThisBuild \/ version := \"${{ steps.tag_bump.outputs.new_version }}\"/" build.sbt
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add build.sbt
+          git commit -m "chore: bump version to ${{ steps.tag_bump.outputs.new_version }} [skip ci]"
+          git push
+
+      - name: Build
+        run: sbt build
+
+      - name: Create Automatic Release
+        if: steps.tag_bump.outputs.new_tag != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ steps.tag_bump.outputs.new_tag }} target/dist/* \
+            --title "Release ${{ steps.tag_bump.outputs.new_tag }}" \
+            --generate-notes
+
+      - name: Deploy to GitHub Pages
+        if: steps.tag_bump.outputs.new_tag != ''
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./target/api/report
+          publish_branch: gh-pages

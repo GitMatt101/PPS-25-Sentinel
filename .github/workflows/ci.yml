@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: 'sbt'
+      - name: Setup sbt
+        uses: sbt/setup-sbt@v1
+      - name: Build and test
+        run: sbt check
+      - name: Run coverage report
+        run: sbt coverageReport
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: '**/scoverage-report/scoverage.xml'
+          fail_ci_if_error: true
+          verbose: true
