@@ -16,8 +16,12 @@ object Dependencies {
     /*
      * Scalafx 
      */
-    val fxVersion  = "22"
-    val scalaFXVersion = "22.0.0-R33"
+    lazy val scalaFXVersion = "22.0.0-R33"
+    lazy val scalafx = "org.scalafx" %% "scalafx" % scalaFXVersion
+    /*
+     * OpenJFX modules
+     */
+    lazy val fxVersion = scalaFXVersion.split('.').head
     lazy val oss = Seq("linux", "win", "mac-aarch64")
     lazy val modules = Seq("base", "graphics", "controls", "media", "fxml", "web")
     lazy val fxDependencies =
@@ -25,7 +29,6 @@ object Dependencies {
         module <- modules
         os <- oss
       } yield  "org.openjfx" % s"javafx-$module" % fxVersion classifier os
-    lazy val scalafx = "org.scalafx" %% "scalafx" % scalaFXVersion
   }
   import Modules.*
   /** GUI dependencies. 
