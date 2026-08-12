@@ -1,5 +1,49 @@
-.doctype {docs}
+<!-- Document Configuration -->
+.doctype {paged}
+.docname {Sentinel - Report}
+.docauthors
+    - Cecchini Andrea
+    - Forti Mattia
+    - Marcaccio Leonardo
+<!-- Margin content  -->
+.pagemargin {bottomcenter}
+  .currentpage / .totalpages
+.pagemargin {topleft}
+    *.lastheading depth:{1}*
+.pagemargin {topright}
+    *.lastheading depth:{2}*
+<!-- Paragraph style configuration  -->
+.paragraphstyle lineheight:{1.8} spacing:{0} indent:{2}
 
-.theme layout:{latex}
+<!-- Front Page  -->
+.align {end}
+    #! Sentinel
+.tableofcontents
 
-# Project Report
+<!-- Chapter: Analisys -->
+.align {end} 
+    # Analisi
+
+## Descrizione requisiti
+
+### Requisiti funzionali
+
+### Requisiti non funzionali
+
+## Modello del dominio
+
+<!-- Chapter: Design  -->
+.align {end} 
+    # Design
+
+## Architettura del sistema
+
+## Design in dettaglio
+
+<!-- Chapter: Sviluppo  -->
+.align {end} 
+    # Sviluppo
+
+<!-- Chapter: Commenti finali -->
+.align {end} 
+    # Commenti Finali
