@@ -13,9 +13,24 @@ object Dependencies {
      * Mockito
      */
     lazy val mockito = "org.scalatestplus" %% "mockito-5-23" % "3.2.20.0"
+    /*
+     * Scalafx 
+     */
+    val fxVersion  = "22"
+    val scalaFXVersion = "22.0.0-R33"
+    lazy val oss = Seq("linux", "win", "mac-aarch64")
+    lazy val modules = Seq("base", "graphics", "controls", "media", "fxml", "web")
+    lazy val fxDependencies =
+      for {
+        module <- modules
+        os <- oss
+      } yield  "org.openjfx" % s"javafx-$module" % fxVersion classifier os
+    lazy val scalafx = "org.scalafx" %% "scalafx" % scalaFXVersion
   }
   import Modules.*
-
+  /** GUI dependencies. 
+   */
+  lazy val gui: Seq[ModuleID] = scalafx +: fxDependencies
   /** A sequence of testing dependencies.
    */
   lazy val testing: Seq[ModuleID] = Seq(scalaTest, mockito) map (_ % Test)

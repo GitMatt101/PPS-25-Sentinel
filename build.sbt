@@ -63,12 +63,16 @@ lazy val generateReport =
 lazy val root = (project in file("."))
   .settings(
     name := "scala3-template",
+    libraryDependencies ++= Dependencies.gui,
     // Assembly configuration...
     assembly / assemblyJarName := s"${name.value}-${version.value}-fat.jar",
     assembly / assemblyOutputPath := baseDirectory.value / "target" / "dist" / s"${name.value}-${version.value}-fat.jar",
+    assembly / mainClass := Some("Launcher"),
     assembly / assemblyMergeStrategy := {
-      case PathList("META-INF", _*) => MergeStrategy.discard
-      case _                        => MergeStrategy.first
+      case PathList("module-info.class")         => MergeStrategy.discard
+      case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+      case PathList("META-INF", _*)              => MergeStrategy.discard
+      case x                                     => MergeStrategy.first
     },
     // Report Generation Tasks
     generateReportHtml := {
