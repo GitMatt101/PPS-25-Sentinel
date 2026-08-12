@@ -1,3 +1,5 @@
+package it.unibo.sentinel
+
 import scalafx.application.JFXApp3
 import scalafx.scene.Scene
 import scalafx.scene.layout.StackPane
