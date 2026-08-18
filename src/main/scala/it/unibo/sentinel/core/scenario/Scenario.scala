@@ -3,6 +3,7 @@ package it.unibo.sentinel.core.scenario
 import it.unibo.sentinel.core.warehouse.{Warehouse, Position}
 import it.unibo.sentinel.core.robot.{Robot, RobotId}
 import it.unibo.sentinel.core.mission.{Mission, MissionId}
+import it.unibo.sentinel.core.scenario.Policies.Routing
 
 /** Represents a [[Robot]] placed in a [[Position]] in the [[Warehouse]].
   *
@@ -59,6 +60,18 @@ trait Scenario:
   def warehouse: Warehouse
 
   /** @return
+    *   the [[Policies.Routing]] policy of the [[Scenario]].
+    */
+  def routing: Policies.Routing
+
+  /** @param routing
+    *   the [[Policies.Routing]] policy to use in the new [[Scenario]].
+    * @return
+    *   a new [[Scenario]] with the given [[Policies.Routing]] policy.
+    */
+  def withRouting(routing: Policies.Routing): Scenario
+
+  /** @return
     *   the [[Spawn]]s of the [[Scenario]].
     */
   def spawns: Seq[Spawn]
@@ -94,12 +107,13 @@ object Scenario:
     *   [[Warehouse]].
     */
   def in(warehouse: Warehouse): Scenario =
-    Blueprint(warehouse, Seq.empty, Seq.empty)
+    Blueprint(warehouse, Seq.empty, Seq.empty, Routing.Distance)
 
   private case class Blueprint(
       warehouse: Warehouse,
       spawns: Seq[Spawn],
-      missions: Seq[Mission]
+      missions: Seq[Mission],
+      routing: Policies.Routing
   ) extends Scenario:
 
     override def place(spawn: Spawn): Either[Validation, Scenario] =
@@ -124,6 +138,9 @@ object Scenario:
           MissionAlreadyExists(mission.id)
         )
       yield copy(missions = missions :+ mission)
+
+    override def withRouting(routing: Routing): Scenario =
+      copy(routing = routing)
 
     private def ensure(
         cond: => Boolean,

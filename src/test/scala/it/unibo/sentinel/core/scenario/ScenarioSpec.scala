@@ -4,6 +4,7 @@ import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Area, Tile}
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.mission.{Mission, MissionId, Task}
+import org.mockito.Mockito
 
 class ScenarioSpec extends UnitTest:
   import Validation.*
@@ -27,6 +28,9 @@ class ScenarioSpec extends UnitTest:
 
       "should not contain any mission" in:
         s0.missions shouldBe empty
+
+      "have a default routing policy" in:
+        s0.routing shouldBe Policies.Routing.Distance
 
     "place a robot" should:
 
@@ -85,3 +89,10 @@ class ScenarioSpec extends UnitTest:
             s2 <- s1.load(mission)
           yield s2
         result.left.value shouldBe MissionAlreadyExists(mission.id)
+
+    "change the routing policy" should:
+
+      "return a new scenario with the routing policy changed" in:
+        val newRouting = Mockito.mock[Policies.Routing]()
+        val result = s0.withRouting(newRouting)
+        result.routing shouldBe newRouting
