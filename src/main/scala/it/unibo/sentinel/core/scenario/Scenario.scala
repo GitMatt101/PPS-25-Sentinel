@@ -71,6 +71,14 @@ trait Scenario:
     */
   def place(spawn: Spawn): Either[Validation, Scenario]
 
+  /** @param mission
+    *   the [[Mission]] to load in the [[Scenario]].
+    * @return
+    *   an [[Either]] containing the updated [[Scenario]] if the loading is
+    *   valid, or a [[Validation]] error otherwise.
+    */
+  def load(mission: Mission): Either[Validation, Scenario]
+
 object Scenario:
   import Validation.*
 
@@ -88,6 +96,7 @@ object Scenario:
       spawns: Seq[Spawn],
       missions: Seq[Mission]
   ) extends Scenario:
+
     override def place(spawn: Spawn): Either[Validation, Scenario] =
       for
         _ <- ensure(
@@ -103,6 +112,9 @@ object Scenario:
           RobotAlreadyExists(spawn.id)
         )
       yield copy(spawns = spawns :+ spawn)
+
+    override def load(mission: Mission): Either[Validation, Scenario] =
+      Right(copy(missions = missions :+ mission))
 
     private def ensure(
         cond: => Boolean,

@@ -3,6 +3,7 @@ package it.unibo.sentinel.core.scenario
 import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Area, Tile}
 import it.unibo.sentinel.core.robot.RobotId
+import it.unibo.sentinel.core.mission.{Mission, MissionId, Task}
 
 class ScenarioSpec extends UnitTest:
   import Validation.*
@@ -60,3 +61,14 @@ class ScenarioSpec extends UnitTest:
             s2 <- s1.place(Spawn(id = id, at = Position(1, 2)))
           yield s2
         result.left.value shouldBe RobotAlreadyExists(id)
+
+    "load a mission" should:
+
+      "return a new scenario with the mission added" in:
+        val mission = Mission(
+          id = MissionId("M1"),
+          task = Task.Move(Position(1, 1)),
+          duration = 10
+        )
+        val result = s0.load(mission).right.value
+        result.missions should contain only mission
