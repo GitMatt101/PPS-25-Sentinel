@@ -28,6 +28,18 @@ final case class Spawn(id: RobotId, at: Position):
     */
   def toPlacement: Placement = Placement(Robot(id), at)
 
+/** */
+enum Validation:
+  /** @param position
+    *   the [[Position]] that is already occupied by another [[Robot]].
+    */
+  case PositionOccupied(position: Position)
+
+  /** @param position
+    *   the [[Position]] that is not a floor tile.
+    */
+  case NotFloorTile(position: Position)
+
 /** Represents the dynamic context of the environment to simulate.
   */
 trait Scenario:
@@ -49,11 +61,13 @@ trait Scenario:
   /** @param spawn
     *   the [[Spawn]] to place in the [[Scenario]].
     * @return
-    *   a new [[Scenario]] with the given [[Spawn]] placed.
+    *   an [[Either]] containing the updated [[Scenario]] if the placement is
+    *   valid, or a [[Validation]] error otherwise.
     */
-  def place(spawn: Spawn): Scenario
+  def place(spawn: Spawn): Either[Validation, Scenario]
 
 object Scenario:
+  import Validation.*
 
   /** @param warehouse
     *   the [[Warehouse]] the [[Scenario]] refers to.
@@ -69,5 +83,9 @@ object Scenario:
       spawns: Seq[Spawn],
       missions: Seq[Mission]
   ) extends Scenario:
-    override def place(spawn: Spawn): Scenario =
-      copy(spawns = spawns :+ spawn)
+    override def place(spawn: Spawn): Either[Validation, Scenario] =
+      Either.cond(
+        !spawns.exists(_.at == spawn.at),
+        copy(spawns = spawns :+ spawn),
+        PositionOccupied(spawn.at)
+      )

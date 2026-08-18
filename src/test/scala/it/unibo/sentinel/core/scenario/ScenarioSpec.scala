@@ -5,6 +5,7 @@ import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Area, Tile}
 import it.unibo.sentinel.core.robot.RobotId
 
 class ScenarioSpec extends UnitTest:
+  import Validation.*
   "A Scenario" when:
     val width = 5
     val height = 5
@@ -30,8 +31,18 @@ class ScenarioSpec extends UnitTest:
 
       "return a new scenario with the robot placed" in:
         val result =
-          s0.place(Spawn(id = RobotId("R1"), at = Position(1, 1)))
+          s0.place(Spawn(id = RobotId("R1"), at = Position(1, 1))).right.value
         result.spawns should contain only Spawn(
           id = RobotId("R1"),
           at = Position(1, 1)
         )
+
+      "signal that the position is occupied" in:
+        val position = Position(1, 1)
+        val result =
+          for
+            s1 <- s0.place(Spawn(id = RobotId("R1"), at = position))
+            s2 <- s1.place(Spawn(id = RobotId("R2"), at = position))
+          yield s2
+        result.left.value shouldBe PositionOccupied(Position(1, 1))
+
