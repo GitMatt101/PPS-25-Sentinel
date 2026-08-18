@@ -46,3 +46,8 @@ class ScenarioSpec extends UnitTest:
           yield s2
         result.left.value shouldBe PositionOccupied(Position(1, 1))
 
+      "signal that the position is not a floor tile" in:
+        val position = Position(0, 0)
+        val result =
+          s0.place(Spawn(id = RobotId("R1"), at = position))
+        result.left.value shouldBe NotFloorTile(position)

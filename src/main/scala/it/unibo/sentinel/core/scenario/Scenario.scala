@@ -84,8 +84,19 @@ object Scenario:
       missions: Seq[Mission]
   ) extends Scenario:
     override def place(spawn: Spawn): Either[Validation, Scenario] =
-      Either.cond(
-        !spawns.exists(_.at == spawn.at),
-        copy(spawns = spawns :+ spawn),
-        PositionOccupied(spawn.at)
-      )
+      for
+        _ <- ensure(
+          warehouse.isTraversable(spawn.at),
+          NotFloorTile(spawn.at)
+        )
+        _ <- ensure(
+          !spawns.exists(_.at == spawn.at),
+          PositionOccupied(spawn.at)
+        )
+      yield copy(spawns = spawns :+ spawn)
+
+    private def ensure(
+        cond: => Boolean,
+        error: => Validation
+    ): Either[Validation, Unit] =
+      Either.cond(cond, (), error)
