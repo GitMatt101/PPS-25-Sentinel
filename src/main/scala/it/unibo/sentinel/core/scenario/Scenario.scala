@@ -46,7 +46,15 @@ trait Scenario:
     */
   def missions: Seq[Mission]
 
+  /** @param spawn
+    *   the [[Spawn]] to place in the [[Scenario]].
+    * @return
+    *   a new [[Scenario]] with the given [[Spawn]] placed.
+    */
+  def place(spawn: Spawn): Scenario
+
 object Scenario:
+
   /** @param warehouse
     *   the [[Warehouse]] the [[Scenario]] refers to.
     * @return
@@ -60,4 +68,6 @@ object Scenario:
       warehouse: Warehouse,
       spawns: Seq[Spawn],
       missions: Seq[Mission]
-  ) extends Scenario
+  ) extends Scenario:
+    override def place(spawn: Spawn): Scenario =
+      copy(spawns = spawns :+ spawn)

@@ -2,6 +2,7 @@ package it.unibo.sentinel.core.scenario
 
 import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Area, Tile}
+import it.unibo.sentinel.core.robot.RobotId
 
 class ScenarioSpec extends UnitTest:
   "A Scenario" when:
@@ -25,3 +26,12 @@ class ScenarioSpec extends UnitTest:
       "should not contain any mission" in:
         s0.missions shouldBe empty
 
+    "place a robot" should:
+
+      "return a new scenario with the robot placed" in:
+        val result =
+          s0.place(Spawn(id = RobotId("R1"), at = Position(1, 1)))
+        result.spawns should contain only Spawn(
+          id = RobotId("R1"),
+          at = Position(1, 1)
+        )
