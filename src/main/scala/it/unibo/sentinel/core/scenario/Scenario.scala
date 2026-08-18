@@ -40,6 +40,11 @@ enum Validation:
     */
   case NotFloorTile(position: Position)
 
+  /** @param id
+    *   the [[RobotId]] of the [[Robot]] that is already exists.
+    */
+  case RobotAlreadyExists(id: RobotId)
+
 /** Represents the dynamic context of the environment to simulate.
   */
 trait Scenario:
@@ -92,6 +97,10 @@ object Scenario:
         _ <- ensure(
           !spawns.exists(_.at == spawn.at),
           PositionOccupied(spawn.at)
+        )
+        _ <- ensure(
+          !spawns.exists(_.id == spawn.id),
+          RobotAlreadyExists(spawn.id)
         )
       yield copy(spawns = spawns :+ spawn)
 

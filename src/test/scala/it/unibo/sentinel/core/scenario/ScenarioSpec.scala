@@ -51,3 +51,12 @@ class ScenarioSpec extends UnitTest:
         val result =
           s0.place(Spawn(id = RobotId("R1"), at = position))
         result.left.value shouldBe NotFloorTile(position)
+
+      "signal that the id is already used" in:
+        val id = RobotId("R1")
+        val result =
+          for
+            s1 <- s0.place(Spawn(id = id, at = Position(1, 1)))
+            s2 <- s1.place(Spawn(id = id, at = Position(1, 2)))
+          yield s2
+        result.left.value shouldBe RobotAlreadyExists(id)
