@@ -72,3 +72,16 @@ class ScenarioSpec extends UnitTest:
         )
         val result = s0.load(mission).right.value
         result.missions should contain only mission
+
+      "signal that the mission id already exists" in:
+        val mission = Mission(
+          id = MissionId("M1"),
+          task = Task.Move(Position(1, 1)),
+          duration = 10
+        )
+        val result =
+          for
+            s1 <- s0.load(mission)
+            s2 <- s1.load(mission)
+          yield s2
+        result.left.value shouldBe MissionAlreadyExists(mission.id)

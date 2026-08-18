@@ -2,7 +2,7 @@ package it.unibo.sentinel.core.scenario
 
 import it.unibo.sentinel.core.warehouse.{Warehouse, Position}
 import it.unibo.sentinel.core.robot.{Robot, RobotId}
-import it.unibo.sentinel.core.mission.Mission
+import it.unibo.sentinel.core.mission.{Mission, MissionId}
 
 /** Represents a [[Robot]] placed in a [[Position]] in the [[Warehouse]].
   *
@@ -44,6 +44,11 @@ enum Validation:
     *   the [[RobotId]] of the [[Robot]] that is already exists.
     */
   case RobotAlreadyExists(id: RobotId)
+
+  /** @param id
+    *   the [[MissionId]] of the [[Mission]] that is already exists.
+    */
+  case MissionAlreadyExists(id: MissionId)
 
 /** Represents the dynamic context of the environment to simulate.
   */
@@ -114,7 +119,11 @@ object Scenario:
       yield copy(spawns = spawns :+ spawn)
 
     override def load(mission: Mission): Either[Validation, Scenario] =
-      Right(copy(missions = missions :+ mission))
+      for _ <- ensure(
+          !missions.exists(_.id == mission.id),
+          MissionAlreadyExists(mission.id)
+        )
+      yield copy(missions = missions :+ mission)
 
     private def ensure(
         cond: => Boolean,
