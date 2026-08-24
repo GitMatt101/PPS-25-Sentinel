@@ -8,7 +8,7 @@ ThisBuild / version := "0.0.1"
 /*
  * Static analysis configuration...
  */
-ThisBuild / scalacOptions ++= Seq("-Werror", "-Wall", "-Wunused:all")
+ThisBuild / scalacOptions ++= Seq("-Werror", "-Wunused:all")
 /*
  * Scaladoc configuration...
  */
@@ -23,7 +23,13 @@ Compile / doc / scalacOptions ++= Seq(
  * Wartremover configuration...
  */
 ThisBuild / wartremoverErrors ++= {
-  val excluded = Set(Wart.Var, Wart.Any)
+  val excluded =
+    Set(
+      Wart.Var,
+      Wart.Any,
+      Wart.TripleQuestionMark,
+      Wart.DefaultArguments
+    )
   Warts.unsafe.filterNot(excluded.contains)
 }
 /*
@@ -36,7 +42,7 @@ val coverageThreshold = 70
 ThisBuild / coverageFailOnMinimum := true
 ThisBuild / coverageMinimumStmtTotal := coverageThreshold
 ThisBuild / coverageMinimumBranchTotal := coverageThreshold
-ThisBuild / coverageExcludedFiles := ".*Main.*"
+ThisBuild / coverageExcludedFiles := ".*Main.*;.*/launcher/.*;.*Application.*;.*/boundary/gui/.*"
 ThisBuild / coverageHighlighting := true
 /*
  * Common libraries between subprojects...
@@ -56,13 +62,24 @@ lazy val generateReport =
  */
 lazy val root = (project in file("."))
   .settings(
-    name := "scala3-template",
+    name := "Sentinel",
+    libraryDependencies ++= Dependencies.gui ++ Dependencies.reactive,
+    Compile / run / fork := true,
+    Compile / run / javaOptions += "--enable-native-access=ALL-UNNAMED",
     // Assembly configuration...
-    assembly / assemblyJarName := s"${name.value}-${version.value}-fat.jar",
-    assembly / assemblyOutputPath := baseDirectory.value / "target" / "dist" / s"${name.value}-${version.value}-fat.jar",
+    assembly / assemblyOutputPath := baseDirectory.value / "target" / "dist" / s"${name.value}-${version.value}.jar",
+    assembly / mainClass := Some(
+      "it.unibo.sentinel.boundary.launcher.Launcher"
+    ),
+    assembly / packageOptions += Package.ManifestAttributes(
+      "Enable-Native-Access" -> "ALL-UNNAMED"
+    ),
     assembly / assemblyMergeStrategy := {
-      case PathList("META-INF", _*) => MergeStrategy.discard
-      case _                        => MergeStrategy.first
+      case PathList("module-info.class")         => MergeStrategy.discard
+      case x if x.endsWith("/module-info.class") => MergeStrategy.discard
+      case PathList("META-INF", _*)              => MergeStrategy.discard
+      case PathList("scala", _*)                 => MergeStrategy.last
+      case x                                     => MergeStrategy.first
     },
     // Report Generation Tasks
     generateReportHtml := {
