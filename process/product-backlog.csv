@@ -4,10 +4,10 @@ PB-02,2,"As devs, we need to draft the Requirement Specification to enhance our 
 PB-03,3,"As devs, we need to draft an initial Architectural Design Diagram","",5,DONE,-,-,-,-,-
 PB-04,4,"As warehouse manager, I want to model a 1 room warehouse with no obstacles/loading zones","",8,8,3,-,-,-,-
 PB-05,5,"As warehouse manager, I want to add a simple robot in the scenario","",3,3,1,-,-,-,-
-PB-06,6,"As warehouse manager, I want to add 1 movement mission in the scenario","",3,3,1,-,-,-,-
+PB-06,6,"As warehouse manager, I want to add 1 movement mission in the scenario","",3,3,2,-,-,-,-
 PB-07,7,"As a warehouse manager, I want to configure a routing policy that minimizes hop count","",5,5,1,-,-,-,-
 PB-08,8,"As a warehouse manager, I want to configure an assignment policy that assigns missions to the nearest robot","",5,5,1,-,-,-,-
-PB-09,9,"As a warehouse manager, I want to run a simulation of a scenario","",13,13,DONE,-,-,-,-
+PB-09,9,"As a warehouse manager, I want to run a simulation of a scenario","",13,13,1,-,-,-,-
 PB-10,10,"As warehouse manager, I want to add multiple movement missions in the scenario","PB-06",5,5,1,-,-,-,-
 PB-11,11,"As warehouse manager, I want to model obstacles and the traversal cost of the tiles","PB-04",8,8,8,"","","",""
 PB-12,12,"As warehouse manager, I want to add multiple simple robots in the scenario","PB-05",5,5,1,-,-,-,-
