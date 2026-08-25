@@ -110,4 +110,5 @@ object Robot:
       case Some(_ +: rest) => Some(rest)
       case _               => _path
 
-    override def pause(): Unit = _waiting = true
+    override def pause(): Unit =
+      if _mission.isDefined then _waiting = true

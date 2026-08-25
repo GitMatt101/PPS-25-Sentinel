@@ -47,6 +47,11 @@ class RobotSpec extends UnitTest with RobotFixture:
       "accept a mission" in:
         withMission(m1).mission shouldBe Some(m1)
 
+      "not be able to be paused" in:
+        val robot = simple
+        robot.pause()
+        robot.status shouldBe RobotStatus.Idle
+
     "has a mission" should:
 
       "not be able to accept a mission" in:
