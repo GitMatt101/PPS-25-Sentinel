@@ -115,6 +115,6 @@ object Robot:
       case _               => _path
 
     override def pause(): Unit =
-      if _mission.isDefined then _waiting = true
+      if status == RobotStatus.Moving then _waiting = true
 
     override def resume(): Unit = _waiting = false

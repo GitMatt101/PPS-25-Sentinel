@@ -64,11 +64,6 @@ class RobotSpec extends UnitTest with RobotFixture:
       "be ready to start the mission" in:
         withMission(m1).status shouldBe RobotStatus.Ready
 
-      "be able to be paused" in:
-        val robot = withMission(m1)
-        robot.pause()
-        robot.status shouldBe RobotStatus.Waiting
-
     "following a path" should:
 
       "have the correct path and status" in:
@@ -87,6 +82,11 @@ class RobotSpec extends UnitTest with RobotFixture:
         robot.step()
         robot.next shouldBe None
 
+      "be able to be paused" in:
+        val robot = withPath()
+        robot.pause()
+        robot.status shouldBe RobotStatus.Waiting
+
     "releasing the mission" should:
       val released: Robot = withMission(m1)
       released.release()
@@ -100,7 +100,7 @@ class RobotSpec extends UnitTest with RobotFixture:
     "paused" should:
 
       "be able to resume its mission" in:
-        val robot = withMission(m1)
+        val robot = withPath()
         robot.pause()
         robot.resume()
-        robot.status shouldBe RobotStatus.Ready
+        robot.status shouldBe RobotStatus.Moving
