@@ -65,6 +65,10 @@ trait Robot:
     */
   def pause(): Unit
 
+  /** Resumes the robot's movement
+    */
+  def resume(): Unit
+
 object Robot:
   /** @param id
     *   the robot's identifier
@@ -112,3 +116,5 @@ object Robot:
 
     override def pause(): Unit =
       if _mission.isDefined then _waiting = true
+
+    override def resume(): Unit = _waiting = false

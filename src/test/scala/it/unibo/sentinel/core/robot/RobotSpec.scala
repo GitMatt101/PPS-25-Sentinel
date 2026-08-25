@@ -96,3 +96,11 @@ class RobotSpec extends UnitTest with RobotFixture:
 
       "remove the mission" in:
         released.mission shouldBe None
+
+    "paused" should:
+
+      "be able to resume its mission" in:
+        val robot = withMission(m1)
+        robot.pause()
+        robot.resume()
+        robot.status shouldBe RobotStatus.Ready
