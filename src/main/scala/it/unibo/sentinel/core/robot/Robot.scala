@@ -61,6 +61,10 @@ trait Robot:
     */
   def step(): Unit
 
+  /** Pauses the robot's movement
+    */
+  def pause(): Unit
+
 object Robot:
   /** @param id
     *   the robot's identifier
@@ -75,13 +79,17 @@ object Robot:
 
     private var _mission: Option[MissionId] = None
     private var _path: Option[Path] = None
+    private var _waiting: Boolean = false
 
     override def mission: Option[MissionId] = _mission
 
-    override def status: RobotStatus = (_mission, _path) match
-      case (None, None)    => RobotStatus.Idle
-      case (Some(_), None) => RobotStatus.Ready
-      case (_, Some(_))    => RobotStatus.Moving
+    override def status: RobotStatus =
+      if _waiting then RobotStatus.Waiting
+      else
+        (_mission, _path) match
+          case (None, None)    => RobotStatus.Idle
+          case (Some(_), None) => RobotStatus.Ready
+          case (_, Some(_))    => RobotStatus.Moving
 
     override def canAccept: Boolean = mission.isEmpty
 
@@ -101,3 +109,5 @@ object Robot:
     override def step(): Unit = _path = _path match
       case Some(_ +: rest) => Some(rest)
       case _               => _path
+
+    override def pause(): Unit = _waiting = true

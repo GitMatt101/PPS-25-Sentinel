@@ -59,6 +59,11 @@ class RobotSpec extends UnitTest with RobotFixture:
       "be ready to start the mission" in:
         withMission(m1).status shouldBe RobotStatus.Ready
 
+      "be able to be paused" in:
+        val robot = withMission(m1)
+        robot.pause()
+        robot.status shouldBe RobotStatus.Waiting
+
     "following a path" should:
 
       "have the correct path and status" in:
