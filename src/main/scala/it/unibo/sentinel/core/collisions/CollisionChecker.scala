@@ -5,7 +5,9 @@ import it.unibo.sentinel.core.robot.Intent
 import it.unibo.sentinel.core.robot.robotId
 import it.unibo.sentinel.core.robot.position
 
-trait CollisionsChecker:
+/** Used to check for collisions between [[Robot]]s
+  */
+trait CollisionChecker:
 
   /** @param intents
     *   the intent of each robot to move to a specific position
@@ -15,17 +17,10 @@ trait CollisionsChecker:
     */
   def checkCollisions(intents: Seq[Intent]): Seq[Seq[RobotId]]
 
-object CollisionsChecker:
-
-  /** @return
-    *   a [[CollisionChecker]] that simply checks which robots collide
-    */
-  def apply(): CollisionsChecker = new CollisionsChecker:
+object CollisionChecker extends CollisionChecker:
 
     override def checkCollisions(intents: Seq[Intent]): Seq[Seq[RobotId]] =
       intents
         .groupBy(_.position)
-        .map(_._2)
-        .filter(_.size > 1)
-        .map(i => i.map(_.robotId))
+        .map(_._2.map(_.robotId))
         .toSeq

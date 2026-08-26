@@ -5,11 +5,10 @@ import it.unibo.sentinel.core.robot.Robot
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.warehouse.Position
 import it.unibo.sentinel.core.routing.Path
+import it.unibo.sentinel.core.scenario.Placement
 
 trait CollisionCheckerFixture:
   self: UnitTest =>
-
-  val checker: CollisionsChecker = CollisionsChecker()
 
   val path1: Path = Seq(Position(1, 1))
   val path2: Path = Seq(Position(5, 5))
@@ -39,10 +38,9 @@ class CollisionCheckerSpec extends UnitTest with CollisionCheckerFixture:
     "checking collisions" should:
 
       "return a list of groups of robots that collide" in:
-        val intents = allRobots.flatMap { r =>
-          r.next.map(value => Intent(r.id, value))
-        }
-        checker.checkCollisions(intents) shouldBe Seq(
+        val intents = allRobots.map(r => Placement(r, Position(0, 0)).intent)
+        CollisionChecker.checkCollisions(intents) should contain theSameElementsAs Seq(
           group1.map(_.id),
-          group2.map(_.id)
+          group2.map(_.id),
+          Seq(rFree.id)
         )
