@@ -1,11 +1,10 @@
 package it.unibo.sentinel.core.simulation
 
-import it.unibo.sentinel.core.robot.{Robot, RobotId}
+import it.unibo.sentinel.core.robot.{Robot, RobotId, position}
 import it.unibo.sentinel.core.scenario.Placement
 import it.unibo.sentinel.core.warehouse.Warehouse
-import it.unibo.sentinel.core.mission.{Mission, MissionId}
+import it.unibo.sentinel.core.mission.{Mission, MissionId, MissionStatus}
 import it.unibo.sentinel.core.routing.Path
-import it.unibo.sentinel.core.mission.MissionStatus
 
 /** Provides query operations to inspect the state of the simulation.
   */
@@ -123,13 +122,13 @@ private[core] final class Environment private[core] (
       spot <- fleet.get(r_id)
       robot = spot.robot
       from = spot.at
-      to <- robot.next
+      intent = spot.intent
     yield
-      if !fleet.values.exists(_.at == to)
+      if !fleet.values.exists(p => p.at == intent.position && p.intent.position == p.at)
       then
         robot.step()
-        fleet += (r_id -> spot.copy(at = to))
-        Event.RobotMoved(r_id, from, to)
+        fleet += (r_id -> spot.copy(at = intent.position))
+        Event.RobotMoved(r_id, from, intent.position)
       else Event.RobotBlocked(r_id, from)
 
   /** @param r_id

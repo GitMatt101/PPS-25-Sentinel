@@ -10,6 +10,8 @@ import scala.compiletime.uninitialized
 import it.unibo.sentinel.core.warehouse.Position
 import it.unibo.sentinel.core.mission.MissionStatus
 import it.unibo.sentinel.core.robot.RobotStatus
+import it.unibo.sentinel.core.collisions.SelectionPolicy
+import it.unibo.sentinel.core.collisions.CollisionHandler
 
 class PhaseSpec
     extends UnitTest
@@ -19,6 +21,8 @@ class PhaseSpec
   given Warehouse = warehouse
   given navigator: Navigator = scenario.routing()
   given selector: Selector = scenario.assignment()
+  given SelectionPolicy = scenario.collisionSelection()
+  given CollisionHandler = scenario.collisionAvoidance()
 
   /*
    * We suppressed null warning due to the ScalaTest lifecycle `uninitialized` var usage in beforeEach.
@@ -69,6 +73,18 @@ class PhaseSpec
 
       "do nothing" in:
         Phase.routing(world) shouldBe empty
+  
+  "The handle collisions phase" when:
+
+    "there are colliding robots" should:
+
+      "pause some robots and let another proceed" in:
+        Phase.assigning(world)
+        world.route(r1, Seq(p3, p4))
+        world.route(r2, Seq(p3, p4))
+        Phase.collisionHandling(world) should matchPattern {
+          case Seq(Event.RobotBlocked(_, _)) =>
+        }
 
   "The moving phase" when:
 
@@ -86,6 +102,23 @@ class PhaseSpec
 
       "do nothing" in:
         Phase.moving(world) shouldBe empty
+
+    "robots are blocked" should:
+
+      "unblock if they can move" in:
+        Phase.assigning(world)
+        world.route(r1, Seq(p3, p4))
+        world.route(r2, Seq(p3, p4))
+        Phase.collisionHandling(world)
+        Phase.moving(world) should matchPattern {
+          case Seq(Event.RobotMoved(_, _, _)) =>
+        }
+        Phase.collisionHandling(world) should matchPattern {
+          case Seq(Event.RobotUnblocked(_)) =>
+        }
+        Phase.moving(world) should matchPattern {
+          case Seq(Event.RobotMoved(_, _, _), Event.RobotMoved(_, _, _)) =>
+        }
 
   "The performing phase" when:
 
