@@ -5,6 +5,7 @@ import it.unibo.sentinel.core.scenario.Placement
 import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.core.mission.{Mission, MissionId, MissionStatus}
 import it.unibo.sentinel.core.routing.Path
+import it.unibo.sentinel.core.robot.RobotStatus
 
 /** Provides query operations to inspect the state of the simulation.
   */
@@ -124,12 +125,20 @@ private[core] final class Environment private[core] (
       from = spot.at
       intent = spot.intent
     yield
-      if !fleet.values.exists(p => p.at == intent.position && p.intent.position == p.at)
-      then
+      if canMove(spot) then
         robot.step()
         fleet += (r_id -> spot.copy(at = intent.position))
         Event.RobotMoved(r_id, from, intent.position)
-      else Event.RobotBlocked(r_id, from)
+      else
+        spot.robot.pause()
+        Event.RobotBlocked(r_id, from)
+
+  private def canMove(placement: Placement): Boolean =
+    placement.robot.status == RobotStatus.Moving && fleet.values.forall { other =>
+      val targetPositionOccupied = other.at == placement.intent.position
+      lazy val targetWillNotBeVacated = other.intent.position == placement.at || !canMove(other)
+      !(targetPositionOccupied && targetWillNotBeVacated)
+    }
 
   /** @param r_id
     * @return
