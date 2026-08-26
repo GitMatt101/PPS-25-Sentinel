@@ -1,6 +1,5 @@
-package it.unibo.sentinel.core.collisions
+package it.unibo.sentinel.core.robot
 
-import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.warehouse.Position
 
 /** Represents a [[Robot]] wanting to move to a specific [[Position]]

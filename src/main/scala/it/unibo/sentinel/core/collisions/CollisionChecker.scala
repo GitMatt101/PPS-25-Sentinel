@@ -1,6 +1,9 @@
 package it.unibo.sentinel.core.collisions
 
 import it.unibo.sentinel.core.robot.RobotId
+import it.unibo.sentinel.core.robot.Intent
+import it.unibo.sentinel.core.robot.robotId
+import it.unibo.sentinel.core.robot.position
 
 trait CollisionsChecker:
 
