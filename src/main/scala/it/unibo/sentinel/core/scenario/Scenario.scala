@@ -9,6 +9,7 @@ import it.unibo.sentinel.core.simulation.Environment
 import it.unibo.sentinel.core.scenario.Policies.CollisionAvoidance
 import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
 import it.unibo.sentinel.core.robot.Intent
+import scala.collection.immutable.ListMap
 
 /** Represents a [[Robot]] placed in a [[Position]] in the [[Warehouse]].
   *
@@ -189,8 +190,8 @@ object Scenario:
     override def build: Environment =
       Environment(
         warehouse = warehouse,
-        fleet = spawns.map(s => s.id -> s.toPlacement).toMap,
-        board = missions.map(m => m.id -> m).toMap
+        fleet = ListMap(spawns.map(s => s.id -> s.toPlacement)*),
+        board = ListMap(missions.map(m => m.id -> m)*)
       )
 
     override def place(spawn: Spawn): Either[Validation, Scenario] =
