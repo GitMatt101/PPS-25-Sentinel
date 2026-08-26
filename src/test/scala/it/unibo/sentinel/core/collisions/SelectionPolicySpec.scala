@@ -7,7 +7,7 @@ import it.unibo.sentinel.core.robot.Robot
 trait SelectionPolicyFixture:
   self: UnitTest =>
 
-  val robots: Iterable[Robot] = Iterable(
+  val robots: Seq[Robot] = Seq(
     Robot(RobotId("R1")),
     Robot(RobotId("R2")),
     Robot(RobotId("R3")),

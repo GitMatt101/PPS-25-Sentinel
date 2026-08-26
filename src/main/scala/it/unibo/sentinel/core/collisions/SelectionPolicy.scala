@@ -13,7 +13,7 @@ trait SelectionPolicy:
     * @return
     *   a list containing the ids of the selected [[Robot]]s
     */
-  def select(robots: Iterable[Robot]): Iterable[RobotId]
+  def select(robots: Seq[Robot]): Seq[RobotId]
 
 object SelectionPolicy:
 

@@ -10,7 +10,7 @@ trait CollisionsChecker:
     *   a list of groups of [[RobotId]]s, where each group represents the robots
     *   that will collide (intend to move to the same position)
     */
-  def checkCollisions(intents: Iterable[Intent]): Iterable[Iterable[RobotId]]
+  def checkCollisions(intents: Seq[Intent]): Seq[Seq[RobotId]]
 
 object CollisionsChecker:
 
@@ -19,11 +19,10 @@ object CollisionsChecker:
     */
   def apply(): CollisionsChecker = new CollisionsChecker:
 
-    override def checkCollisions(
-        intents: Iterable[Intent]
-    ): Iterable[Iterable[RobotId]] =
+    override def checkCollisions(intents: Seq[Intent]): Seq[Seq[RobotId]] =
       intents
-      .groupBy(_.position)
-      .map(_._2)
-      .filter(_.size > 1)
-      .map(i => i.map(_.robotId))
+        .groupBy(_.position)
+        .map(_._2)
+        .filter(_.size > 1)
+        .map(i => i.map(_.robotId))
+        .toSeq

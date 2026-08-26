@@ -12,7 +12,7 @@ trait CollisionHandler:
     * @param robots
     *   list of colliding [[Robot]]s
     */
-  def resolveCollisions(robots: Iterable[Robot]): Unit
+  def resolveCollisions(robots: Seq[Robot]): Unit
 
 object CollisionHandler:
 
@@ -26,7 +26,7 @@ object CollisionHandler:
 
       override given policy: SelectionPolicy = selectionPolicy
 
-      override def resolveCollisions(robots: Iterable[Robot]): Unit =
+      override def resolveCollisions(robots: Seq[Robot]): Unit =
         val selectedIds = policy.select(robots)
         val selectedRobots =
           robots.filter(r => selectedIds.toSeq.contains(r.id))

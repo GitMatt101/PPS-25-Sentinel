@@ -24,13 +24,13 @@ trait CollisionCheckerFixture:
   val r5: Robot = Robot(RobotId("R5"))
   val r6: Robot = Robot(RobotId("R6"))
 
-  val group1: Iterable[Robot] = Iterable(r1, r2, r3)
-  val group2: Iterable[Robot] = Iterable(r4, r5, r6)
+  val group1: Seq[Robot] = Seq(r1, r2, r3)
+  val group2: Seq[Robot] = Seq(r4, r5, r6)
 
   group1.foreach(_.follow(path1))
   group2.foreach(_.follow(path2))
 
-  val allRobots = group1 ++ group2 ++ Iterable(rFree)
+  val allRobots = group1 ++ group2 ++ Seq(rFree)
 
 class CollisionCheckerSpec extends UnitTest with CollisionCheckerFixture:
 
@@ -42,7 +42,7 @@ class CollisionCheckerSpec extends UnitTest with CollisionCheckerFixture:
         val intents = allRobots.flatMap { r =>
           r.next.map(value => Intent(r.id, value))
         }
-        checker.checkCollisions(intents) shouldBe Iterable(
+        checker.checkCollisions(intents) shouldBe Seq(
           group1.map(_.id),
           group2.map(_.id)
         )
