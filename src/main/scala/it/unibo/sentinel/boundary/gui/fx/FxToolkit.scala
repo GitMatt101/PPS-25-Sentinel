@@ -101,4 +101,4 @@ object FxToolkit extends Toolkit:
         case Event.RobotMoved(robotId, from, to) =>
           s"$robotId moved from $from to $to"
         case Event.RobotBlocked(robotId, at) => s"$robotId blocked at $at"
-        case Event.RobotUnblocked(robotId) => s"$robotId unblocked"
+        case Event.RobotUnblocked(robotId)   => s"$robotId unblocked"

@@ -23,7 +23,7 @@ final case class Placement(robot: Robot, at: Position):
   def intent: Intent =
     robot.next match
       case Some(pos) => Intent(robot.id, pos)
-      case None       => Intent(robot.id, at)
+      case None      => Intent(robot.id, at)
 
 /** Represents a description of a [[Robot]] to spawn in a [[Scenario]]. It will
   * be used to create a [[Robot]] in the given [[Position]] when the

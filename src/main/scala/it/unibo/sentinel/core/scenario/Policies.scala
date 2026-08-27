@@ -41,11 +41,10 @@ object Policies:
 
     def apply(selections: Int = 1): SelectionPolicy = this match
       case Random => SelectionPolicy.random(selections)
-  
+
   enum CollisionAvoidance:
 
     case Wait
 
     def apply(): CollisionHandler = this match
       case Wait => CollisionHandler.pausing()
-    

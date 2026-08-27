@@ -39,7 +39,9 @@ class CollisionCheckerSpec extends UnitTest with CollisionCheckerFixture:
 
       "return a list of groups of robots that collide" in:
         val intents = allRobots.map(r => Placement(r, Position(0, 0)).intent)
-        CollisionChecker.checkCollisions(intents) should contain theSameElementsAs Seq(
+        CollisionChecker.checkCollisions(
+          intents
+        ) should contain theSameElementsAs Seq(
           group1.map(_.id),
           group2.map(_.id),
           Seq(rFree.id)

@@ -19,8 +19,8 @@ trait CollisionChecker:
 
 object CollisionChecker extends CollisionChecker:
 
-    override def checkCollisions(intents: Seq[Intent]): Seq[Seq[RobotId]] =
-      intents
-        .groupBy(_.position)
-        .map(_._2.map(_.robotId))
-        .toSeq
+  override def checkCollisions(intents: Seq[Intent]): Seq[Seq[RobotId]] =
+    intents
+      .groupBy(_.position)
+      .map(_._2.map(_.robotId))
+      .toSeq

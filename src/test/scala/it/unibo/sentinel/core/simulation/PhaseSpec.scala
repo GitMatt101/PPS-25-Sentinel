@@ -73,7 +73,7 @@ class PhaseSpec
 
       "do nothing" in:
         Phase.routing(world) shouldBe empty
-  
+
   "The handle collisions phase" when:
 
     "there are colliding robots" should:
