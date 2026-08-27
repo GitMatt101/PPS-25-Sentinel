@@ -154,7 +154,7 @@ private[core] final class Environment private[core] (
     */
   def tick(): Seq[Event] =
     val events = for
-      mission <- missions
+      mission <- missions.filterNot(_.status == MissionStatus.Failed)
       next = mission.proceed
     yield
       board += (mission.id -> next)
