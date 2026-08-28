@@ -136,14 +136,13 @@ private[core] final class Environment private[core] (
 
   private def canMove(placement: Placement): Boolean =
     placement.robot.status == RobotStatus.Moving
-    && placement.robot.remaining == Tick.zero
-    && fleet.values.forall {
-      other =>
+      && placement.robot.remaining == Tick.zero
+      && fleet.values.forall { other =>
         val targetPositionOccupied = other.at == placement.intent.position
         lazy val targetWillNotBeVacated =
           other.intent.position == placement.at || !canMove(other)
         !(targetPositionOccupied && targetWillNotBeVacated)
-    }
+      }
 
   /** @param r_id
     * @return
