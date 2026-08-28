@@ -8,8 +8,16 @@ import it.unibo.sentinel.core.scenario.Policies.Assignment
 import it.unibo.sentinel.core.simulation.Environment
 import it.unibo.sentinel.core.scenario.Policies.CollisionAvoidance
 import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
-import it.unibo.sentinel.core.robot.Intent
 import scala.collection.immutable.ListMap
+
+/** Represents the intention of a [[Robot]] to move to a specific [[Position]]
+  *
+  * @param robotId
+  *   the [[Robot]]'s id
+  * @param position
+  *   the destination
+  */
+case class Intent(robotId: RobotId, position: Position)
 
 /** Represents a [[Robot]] placed in a [[Position]] in the [[Warehouse]].
   *

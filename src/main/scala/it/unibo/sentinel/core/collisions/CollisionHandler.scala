@@ -3,7 +3,6 @@ package it.unibo.sentinel.core.collisions
 import it.unibo.sentinel.core.simulation.Event
 import it.unibo.sentinel.core.robot.RobotStatus
 import it.unibo.sentinel.core.scenario.Placement
-import it.unibo.sentinel.core.robot.position
 
 /** Defines how to handle collisions between [[Robot]]s
   */
