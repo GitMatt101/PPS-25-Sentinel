@@ -75,7 +75,7 @@ trait Robot:
   /** Resumes the robot's movement
     */
   def resume(): Unit
-  
+
   /** Advances the robot's internal clock by one tick.
     */
   def tick(): Unit

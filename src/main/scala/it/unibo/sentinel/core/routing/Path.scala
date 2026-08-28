@@ -43,7 +43,7 @@ object Path:
       */
     def ticked: Path = path match
       case step +: rest => step.copy(cost = step.cost.previous) +: rest
-      case _           => path
+      case _            => path
 
     /** @return
       *   the [[Path]] with the first [[Step]] removed if its cost is zero,
@@ -51,4 +51,4 @@ object Path:
       */
     def advanced: Path = path match
       case step +: rest if step.cost == Tick.zero => rest
-      case _                                    => path
+      case _                                      => path

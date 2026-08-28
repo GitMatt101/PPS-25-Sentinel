@@ -14,7 +14,8 @@ trait RobotFixture:
   val m2: MissionId = MissionId("M2")
 
   val costs: Seq[Tick] = Seq(Tick(1), Tick(2), Tick(3))
-  val positions: Seq[Position] = Seq(Position(1, 0), Position(2, 0), Position(3, 0))
+  val positions: Seq[Position] =
+    Seq(Position(1, 0), Position(2, 0), Position(3, 0))
   val steps = positions.zip(costs).map((pos, cost) => Step(pos, cost))
   val path: Path = Path(steps*)
 
