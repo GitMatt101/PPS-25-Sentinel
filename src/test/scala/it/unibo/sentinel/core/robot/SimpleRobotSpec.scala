@@ -14,9 +14,9 @@ trait RobotFixture:
   val m2: MissionId = MissionId("M2")
 
   val costs: Seq[Tick] = Seq(Tick(1), Tick(2), Tick(3))
-  val steps: Seq[Position] = Seq(Position(1, 0), Position(2, 0), Position(3, 0))
-  val legs = steps.zip(costs).map((pos, cost) => Step(pos, cost))
-  val path: Path = Path(legs*)
+  val positions: Seq[Position] = Seq(Position(1, 0), Position(2, 0), Position(3, 0))
+  val steps = positions.zip(costs).map((pos, cost) => Step(pos, cost))
+  val path: Path = Path(steps*)
 
 class SimpleRobotSpec extends UnitTest with RobotFixture:
 
@@ -72,13 +72,13 @@ class SimpleRobotSpec extends UnitTest with RobotFixture:
       robot.follow(path)
 
       "know the path it is following" in:
-        robot.path.value.positions shouldBe steps
+        robot.path.value.positions shouldBe positions
 
       "be moving" in:
         robot.status shouldBe RobotStatus.Moving
 
       "head to the first position of the path" in:
-        robot.next shouldBe steps.headOption
+        robot.next shouldBe positions.headOption
 
       "wait the cost of the next position" in:
         val stepCost = costs.headOption.value
@@ -95,7 +95,7 @@ class SimpleRobotSpec extends UnitTest with RobotFixture:
         robot.follow(path)
         robot.tick()
         robot.step()
-        robot.next shouldBe steps.drop(1).headOption
+        robot.next shouldBe positions.drop(1).headOption
 
       "not move to the next position of the path if the remaining time is not up" in:
         val robot = Robot(robotId)
