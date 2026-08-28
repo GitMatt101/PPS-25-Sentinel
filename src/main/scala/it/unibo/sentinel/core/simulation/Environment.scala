@@ -156,7 +156,7 @@ private[core] final class Environment private[core] (
   def tick(): Seq[Event] =
     placements.foreach(_.robot.tick())
     val events = for
-      mission <- missions
+      mission <- missions.filterNot(_.isOver)
       next = mission.proceed
     yield
       board += (mission.id -> next)
