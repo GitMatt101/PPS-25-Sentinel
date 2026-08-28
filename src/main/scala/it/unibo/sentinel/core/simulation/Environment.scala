@@ -135,7 +135,9 @@ private[core] final class Environment private[core] (
         Event.RobotBlocked(r_id, from)
 
   private def canMove(placement: Placement): Boolean =
-    placement.robot.status == RobotStatus.Moving && fleet.values.forall {
+    placement.robot.status == RobotStatus.Moving
+    && placement.robot.remaining == Tick.zero
+    && fleet.values.forall {
       other =>
         val targetPositionOccupied = other.at == placement.intent.position
         lazy val targetWillNotBeVacated =
