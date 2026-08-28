@@ -12,6 +12,8 @@ import it.unibo.sentinel.core.mission.MissionStatus
 import it.unibo.sentinel.core.robot.RobotStatus
 import it.unibo.sentinel.core.collisions.SelectionPolicy
 import it.unibo.sentinel.core.collisions.CollisionHandler
+import it.unibo.sentinel.core.routing.Path
+import it.unibo.sentinel.core.routing.Step
 
 class PhaseSpec
     extends UnitTest
@@ -80,8 +82,8 @@ class PhaseSpec
 
       "pause some robots and let another proceed" in:
         Phase.assigning(world)
-        world.route(r1, Seq(p3, p4))
-        world.route(r2, Seq(p3, p4))
+        world.route(r1, Path(Step(p3, Tick.unit), Step(p4, Tick.unit)))
+        world.route(r2, Path(Step(p3, Tick.unit), Step(p4, Tick.unit)))
         Phase.collisionHandling(world) should matchPattern {
           case Seq(Event.RobotBlocked(_, _)) =>
         }
@@ -93,6 +95,7 @@ class PhaseSpec
       "advance every one of them by one position" in:
         Phase.assigning(world)
         Phase.routing(world)
+        Phase.expiring(world)
         Phase.moving(world) should contain theSameElementsAs Seq(
           Event.RobotMoved(r1, from = p1, to = p3),
           Event.RobotMoved(r2, from = p2, to = Position(3, 2))
@@ -107,15 +110,17 @@ class PhaseSpec
 
       "unblock if they can move" in:
         Phase.assigning(world)
-        world.route(r1, Seq(p3, p4))
-        world.route(r2, Seq(p3, p4))
+        world.route(r1, Path(Step(p3, Tick.unit), Step(p4, Tick.unit)))
+        world.route(r2, Path(Step(p3, Tick.unit), Step(p4, Tick.unit)))
         Phase.collisionHandling(world)
+        Phase.expiring(world)
         Phase.moving(world) should matchPattern {
           case Seq(Event.RobotMoved(_, _, _)) =>
         }
         Phase.collisionHandling(world) should matchPattern {
           case Seq(Event.RobotUnblocked(_)) =>
         }
+        Phase.expiring(world)
         Phase.moving(world) should matchPattern {
           case Seq(Event.RobotMoved(_, _, _), Event.RobotMoved(_, _, _)) =>
         }
@@ -127,6 +132,7 @@ class PhaseSpec
       "complete the mission" in:
         Phase.assigning(world)
         Phase.routing(world)
+        Phase.expiring(world)
         Phase.moving(world)
 
         Phase.performing(world) should contain theSameElementsAs Seq(
@@ -140,6 +146,7 @@ class PhaseSpec
       "leave it untouched" in:
         Phase.assigning(world)
         Phase.routing(world)
+        Phase.expiring(world)
         Phase.moving(world)
 
         Phase.performing(world) should not contain Event.MissionCompleted(m2)
