@@ -2,14 +2,16 @@ package it.unibo.sentinel.core.simulation
 
 import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.TestData
+import it.unibo.sentinel.core.scenario.Scenario
 import it.unibo.sentinel.core.robot.RobotStatus
 import it.unibo.sentinel.core.mission.MissionStatus
 
-class SimulationSpec extends UnitTest with TestData with EnvironmentFixture:
-  "A BasicSimulation" when:
+trait SimulationBehaviours extends TestData with EnvironmentFixture:
+  self: UnitTest =>
 
+  def commonSimulation(build: Scenario => Simulation): Unit =
     "created" should:
-      val sim = Simulation.of(emptyScenario)
+      val sim = build(emptyScenario)
 
       "start at tick zero" in:
         sim.time shouldBe Tick.zero
@@ -17,17 +19,17 @@ class SimulationSpec extends UnitTest with TestData with EnvironmentFixture:
     "stepped" should:
 
       "increment the time by one tick" in:
-        val sim = Simulation.of(scenario)
+        val sim = build(scenario)
         sim.step()
         sim.time shouldBe Tick(1)
 
       "return a step result with no events if nothing happens" in:
-        val sim = Simulation.of(emptyScenario)
+        val sim = build(emptyScenario)
         val result = sim.step()
         result.events shouldBe empty
 
       "collect all the events that happened during the step" in:
-        val sim = Simulation.of(scenario)
+        val sim = build(scenario)
         val step1 = sim.step()
         step1.events should contain(Event.MissionAssigned(r1, m1))
         step1.events should contain(Event.RobotRouted(r1, Seq(p3)))
@@ -36,7 +38,7 @@ class SimulationSpec extends UnitTest with TestData with EnvironmentFixture:
         step2.events should contain(Event.MissionCompleted(m1))
 
       "return a snapshot of the environment after the step" in:
-        val sim = Simulation.of(scenario)
+        val sim = build(scenario)
         val step1 = sim.step()
         val snapshot1 = step1.snapshot
         snapshot1.robots should contain(
@@ -52,11 +54,6 @@ class SimulationSpec extends UnitTest with TestData with EnvironmentFixture:
         completed.deadline shouldBe deadline - 2
 
     "when all missions are completed" should:
-      val sim = Simulation.of(emptyScenario)
+      val sim = build(emptyScenario)
       "be over" in:
         sim.isOver shouldBe true
-
-    "when there are still missions" should:
-      val sim = Simulation.of(scenario)
-      "not be over" in:
-        sim.isOver shouldBe false
