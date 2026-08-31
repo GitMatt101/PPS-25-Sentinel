@@ -6,6 +6,19 @@ import it.unibo.sentinel.core.mission.{Mission, MissionId}
 import it.unibo.sentinel.core.scenario.Policies.Routing
 import it.unibo.sentinel.core.scenario.Policies.Assignment
 import it.unibo.sentinel.core.simulation.Environment
+import it.unibo.sentinel.core.scenario.Policies.CollisionAvoidance
+import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
+import scala.collection.immutable.ListMap
+import it.unibo.sentinel.core.simulation.Tick
+
+/** Represents the intention of a [[Robot]] to move to a specific [[Position]]
+  *
+  * @param robotId
+  *   the [[Robot]]'s id
+  * @param position
+  *   the destination
+  */
+case class Intent(robotId: RobotId, position: Position)
 
 /** Represents a [[Robot]] placed in a [[Position]] in the [[Warehouse]].
   *
@@ -14,7 +27,15 @@ import it.unibo.sentinel.core.simulation.Environment
   * @param at
   *   the [[Position]] where to place the [[Robot]].
   */
-final case class Placement(robot: Robot, at: Position)
+final case class Placement(robot: Robot, at: Position):
+
+  /** @returns
+    *   an intent to where the robot wants to move
+    */
+  def intent: Intent =
+    (robot.next, robot.remaining) match
+      case (Some(pos), Tick.zero) => Intent(robot.id, pos)
+      case _                      => Intent(robot.id, at)
 
 /** Represents a description of a [[Robot]] to spawn in a [[Scenario]]. It will
   * be used to create a [[Robot]] in the given [[Position]] when the
@@ -71,6 +92,16 @@ trait Scenario:
     */
   def assignment: Policies.Assignment
 
+  /** @return
+    *   the [[Policies.CollisionSelection]] policy of the [[Scenario]].
+    */
+  def collisionSelection: Policies.CollisionSelection
+
+  /** @return
+    *   the [[Policies.CollisionAvoidance]] policy of the [[Scenario]].
+    */
+  def collisionAvoidance: Policies.CollisionAvoidance
+
   /** @param routing
     *   the [[Policies.Routing]] policy to use in the new [[Scenario]].
     * @return
@@ -84,6 +115,24 @@ trait Scenario:
     *   a new [[Scenario]] with the given [[Policies.Assignment]] policy.
     */
   def withAssignment(assignment: Policies.Assignment): Scenario
+
+  /** @param collisionSelection
+    *   the [[Policies.CollisionSelection]] policy to use in the new
+    *   [[Scenario]].
+    * @return
+    *   a new [[Scenario]] with the given [[Policies.CollisionSelection]]
+    *   policy.
+    */
+  def withCollisionSelection(collisionSelection: CollisionSelection): Scenario
+
+  /** @param collisionAvoidance
+    *   the [[Policies.CollisionAvoidance]] policy to use in the new
+    *   [[Scenario]].
+    * @return
+    *   a new [[Scenario]] with the given [[Policies.CollisionAvoidance]]
+    *   policy.
+    */
+  def withCollisionAvoidance(collisionAvoidance: CollisionAvoidance): Scenario
 
   /** @return
     *   the [[Spawn]]s of the [[Scenario]].
@@ -135,7 +184,9 @@ object Scenario:
       Seq.empty,
       Seq.empty,
       Routing.Distance,
-      Assignment.Nearest
+      Assignment.Nearest,
+      CollisionSelection.Random,
+      CollisionAvoidance.Wait
     )
 
   private final case class Blueprint(
@@ -143,14 +194,16 @@ object Scenario:
       spawns: Seq[Spawn],
       missions: Seq[Mission],
       routing: Policies.Routing,
-      assignment: Policies.Assignment
+      assignment: Policies.Assignment,
+      collisionSelection: Policies.CollisionSelection,
+      collisionAvoidance: Policies.CollisionAvoidance
   ) extends Scenario:
 
     override def build: Environment =
       Environment(
         warehouse = warehouse,
-        fleet = spawns.map(s => s.id -> s.toPlacement).toMap,
-        board = missions.map(m => m.id -> m).toMap
+        fleet = ListMap(spawns.map(s => s.id -> s.toPlacement)*),
+        board = ListMap(missions.map(m => m.id -> m)*)
       )
 
     override def place(spawn: Spawn): Either[Validation, Scenario] =
@@ -181,6 +234,16 @@ object Scenario:
 
     override def withAssignment(assignment: Assignment): Scenario =
       copy(assignment = assignment)
+
+    override def withCollisionSelection(
+        collisionSelection: CollisionSelection
+    ): Scenario =
+      copy(collisionSelection = collisionSelection)
+
+    override def withCollisionAvoidance(
+        collisionAvoidance: CollisionAvoidance
+    ): Scenario =
+      copy(collisionAvoidance = collisionAvoidance)
 
     private def ensure(
         cond: => Boolean,
