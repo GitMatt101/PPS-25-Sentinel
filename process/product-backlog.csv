@@ -7,7 +7,7 @@
   PB-06,6,"As a warehouse manager, I want to add a movement mission to a scenario","",3,3,DONE,-,-,-
   PB-07,7,"As a warehouse manager, I want to configure a routing policy that minimizes hop count","",5,5,DONE,-,-,-
   PB-08,8,"As a warehouse manager, I want to assign missions to the nearest robot","",5,5,DONE,-,-,-
-  PB-09,9,"As a warehouse manager, I want to run a simulation of a scenario","",13,13,DONE,-,-,-
+  PB-09,9,"As a warehouse manager, I want to run a simulation of a scenario","",13,13,1,1,-,-
   PB-10,10,"As a warehouse manager, I want to add multiple movement missions to a scenario",PB-06,5,5,DONE,-,-,-
   PB-11,11,"As a warehouse manager, I want to model obstacles and tile traversal costs",PB-04,8,8,8,DONE,-,-
   PB-12,12,"As a warehouse manager, I want to add multiple robots to a scenario",PB-05,5,5,DONE,-,-,-
