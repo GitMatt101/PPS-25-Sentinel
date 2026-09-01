@@ -2,9 +2,18 @@ package it.unibo.sentinel.control.serialization
 
 import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.warehouse.{Position, Tile}
-import it.unibo.sentinel.control.serialization.schemas.{PositionSchema, TileSchema}
-import it.unibo.sentinel.control.serialization.converters.{PositionConverter, TileConverter}
+import it.unibo.sentinel.control.serialization.schemas.{
+  PositionSchema,
+  TileSchema,
+  WarehouseSchema
+}
+import it.unibo.sentinel.control.serialization.converters.{
+  PositionConverter,
+  TileConverter,
+  WarehouseConverter
+}
 import it.unibo.sentinel.core.simulation.Tick
+import it.unibo.sentinel.core.warehouse.Warehouse
 
 class ConvertersSpec extends UnitTest:
 
@@ -22,7 +31,23 @@ class ConvertersSpec extends UnitTest:
       converter = TileConverter
     )
 
-  private def basicConverter[M, S](model: M, schema: S, converter: Converter[M, S]): Unit =
+  "A WarehouseConverter" when:
+    val model: Warehouse = Warehouse
+      .empty(3, 3)
+      .withTile(Position(1, 1))(Tile.Floor(Tick.unit))
+    val schema: WarehouseSchema =
+      WarehouseSchema(3, 3, Seq(PositionSchema(1, 1) -> TileSchema.Floor(1)))
+    behave like basicConverter(
+      model = model,
+      schema = schema,
+      WarehouseConverter
+    )
+
+  private def basicConverter[M, S](
+      model: M,
+      schema: S,
+      converter: Converter[M, S]
+  ): Unit =
     "convert from domain model to schema correctly" in:
       converter.toSchema(model) shouldBe schema
 

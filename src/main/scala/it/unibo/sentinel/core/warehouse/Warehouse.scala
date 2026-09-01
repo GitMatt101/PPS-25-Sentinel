@@ -129,6 +129,8 @@ trait Warehouse:
     */
   def withoutTile(position: Position): Warehouse
 
+  def tiles: Seq[(Position, Tile)]
+
   /** @param position
     *   the position whose neighbors are to be retrieved.
     * @return
@@ -171,3 +173,5 @@ object Warehouse:
 
     override def withoutTile(position: Position): Warehouse =
       copy(layout = layout - position)
+
+    override def tiles: Seq[(Position, Tile)] = layout.toSeq
