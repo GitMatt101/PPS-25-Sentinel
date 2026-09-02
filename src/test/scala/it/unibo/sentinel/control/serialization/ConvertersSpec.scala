@@ -43,7 +43,7 @@ class ConvertersSpec extends UnitTest:
       WarehouseConverter
     )
 
-  private def basicConverter[M, S](
+  private def basicConverter[M, S <: Schema[M]](
       model: M,
       schema: S,
       converter: Converter[M, S]

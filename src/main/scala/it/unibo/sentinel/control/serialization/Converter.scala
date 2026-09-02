@@ -1,7 +1,7 @@
 package it.unibo.sentinel.control.serialization
 
-trait Converter[Model, Schema]:
+trait Converter[Model, ModelSchema <: Schema[Model]]:
 
-  def toSchema(model: Model): Schema
+  def toSchema(model: Model): ModelSchema
 
-  def toDomain(schema: Schema): Model
+  def toDomain(schema: ModelSchema): Model
