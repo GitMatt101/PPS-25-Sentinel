@@ -2,6 +2,7 @@ package it.unibo.sentinel.control.serialization
 
 import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.core.warehouse.Tile
+import it.unibo.sentinel.core.mission.Mission
 
 /** A type class or trait representing a contract for converting domain models
   * into a string-based representation (e.g., JSON, XML, or custom format).
@@ -66,3 +67,6 @@ object Codec:
     /** Tile generation error.
       */
     case TileValidation(error: Tile.Validation)
+    /** Mission generation error.
+      */
+    case MissionValidation(error: Mission.Validation)

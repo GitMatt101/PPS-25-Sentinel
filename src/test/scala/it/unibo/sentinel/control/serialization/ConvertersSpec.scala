@@ -18,6 +18,12 @@ import it.unibo.sentinel.core.scenario.Spawn
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.control.serialization.schemas.SpawnSchema
 import it.unibo.sentinel.control.serialization.converters.SpawnConverter
+import it.unibo.sentinel.core.mission.Mission
+import it.unibo.sentinel.core.mission.MissionId
+import it.unibo.sentinel.control.serialization.schemas.MissionSchema
+import it.unibo.sentinel.control.serialization.schemas.TaskSchema
+import it.unibo.sentinel.control.serialization.schemas.ActionSchema
+import it.unibo.sentinel.control.serialization.converters.MissionConverter
 
 class ConvertersSpec extends UnitTest:
 
@@ -52,6 +58,17 @@ class ConvertersSpec extends UnitTest:
       model = Spawn(RobotId("R1"), Position(1, 1)),
       schema = SpawnSchema("R1", PositionSchema(1, 1)),
       converter = SpawnConverter
+    )
+
+  "A MissionConverter" when:
+    behave like basicConverter(
+      model = Mission.relocate(MissionId("M1"), Position(5, 5), Tick(10)),
+      schema = MissionSchema(
+        "M1",
+        TaskSchema.Single(ActionSchema.Move(PositionSchema(5, 5))),
+        10
+      ),
+      converter = MissionConverter
     )
 
   private def basicConverter[M, S](
