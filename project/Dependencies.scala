@@ -33,6 +33,10 @@ object Dependencies {
      * Monix 
      */
     lazy val monix = "io.monix" %% "monix" % "3.4.0"
+    /* 
+     * uPickle
+     */
+    lazy val uPickle = "com.lihaoyi" %% "upickle" % "3.1.0"
   }
   import Modules.*
   lazy val reactive: Seq[ModuleID] = Seq(monix)
@@ -42,5 +46,8 @@ object Dependencies {
   /** A sequence of testing dependencies.
    */
   lazy val testing: Seq[ModuleID] = Seq(scalaTest, mockito) map (_ % Test)
+  /** Serialization dependencies
+    */
+  lazy val serialization: Seq [ModuleID] = Seq(uPickle)
 }
 // format: on
