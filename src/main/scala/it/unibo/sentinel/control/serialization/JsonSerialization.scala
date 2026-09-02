@@ -5,7 +5,6 @@ import it.unibo.sentinel.control.serialization.Codec.Validation
 import upickle.default.{ReadWriter, read, write, macroRW}
 import scala.util.Try
 import it.unibo.sentinel.core.warehouse.Warehouse
-import it.unibo.sentinel.control.serialization.JsonSerialization.JsonCodec
 import it.unibo.sentinel.control.serialization.schemas.WarehouseSchema
 import it.unibo.sentinel.control.serialization.converters.WarehouseConverter
 import it.unibo.sentinel.control.serialization.schemas.PositionSchema
@@ -30,8 +29,6 @@ object JsonSerialization:
     ): Either[Validation, ModelSchema] =
       Try(read[ModelSchema](input)).toEither.left.map: e =>
         Validation.Syntax(e.getMessage())
-
-object JsonCodecs:
 
   given Converter[Warehouse, WarehouseSchema] = WarehouseConverter
   given ReadWriter[PositionSchema] = macroRW

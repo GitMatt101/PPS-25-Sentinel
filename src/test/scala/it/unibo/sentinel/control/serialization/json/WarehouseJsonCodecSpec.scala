@@ -5,7 +5,7 @@ import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Tile, Area}
 import it.unibo.sentinel.core.simulation.Tick
 import it.unibo.sentinel.control.serialization.Codec.Validation
 import it.unibo.sentinel.control.serialization.Codec
-import it.unibo.sentinel.control.serialization.JsonCodecs.given
+import it.unibo.sentinel.control.serialization.JsonSerialization.given
 
 class WarehouseJsonCodecSpec extends UnitTest:
 
