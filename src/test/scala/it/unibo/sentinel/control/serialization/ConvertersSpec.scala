@@ -1,29 +1,13 @@
 package it.unibo.sentinel.control.serialization
 
 import it.unibo.sentinel.UnitTest
-import it.unibo.sentinel.core.warehouse.{Position, Tile}
-import it.unibo.sentinel.control.serialization.schemas.{
-  PositionSchema,
-  TileSchema,
-  WarehouseSchema
-}
-import it.unibo.sentinel.control.serialization.converters.{
-  PositionConverter,
-  TileConverter,
-  WarehouseConverter
-}
+import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Tile}
+import it.unibo.sentinel.control.serialization.schemas.*
+import it.unibo.sentinel.control.serialization.converters.*
 import it.unibo.sentinel.core.simulation.Tick
-import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.core.scenario.Spawn
 import it.unibo.sentinel.core.robot.RobotId
-import it.unibo.sentinel.control.serialization.schemas.SpawnSchema
-import it.unibo.sentinel.control.serialization.converters.SpawnConverter
-import it.unibo.sentinel.core.mission.Mission
-import it.unibo.sentinel.core.mission.MissionId
-import it.unibo.sentinel.control.serialization.schemas.MissionSchema
-import it.unibo.sentinel.control.serialization.schemas.TaskSchema
-import it.unibo.sentinel.control.serialization.schemas.ActionSchema
-import it.unibo.sentinel.control.serialization.converters.MissionConverter
+import it.unibo.sentinel.core.mission.{Mission, MissionId}
 
 class ConvertersSpec extends UnitTest:
 
@@ -32,13 +16,6 @@ class ConvertersSpec extends UnitTest:
       model = Position(1, 1),
       schema = PositionSchema(1, 1),
       converter = PositionConverter
-    )
-
-  "A TileConverter" when:
-    behave like basicConverter(
-      model = Tile.Floor(Tick.unit),
-      schema = TileSchema.Floor(1),
-      converter = TileConverter
     )
 
   "A WarehouseConverter" when:
