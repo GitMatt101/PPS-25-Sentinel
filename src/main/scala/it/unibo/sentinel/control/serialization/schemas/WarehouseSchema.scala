@@ -6,6 +6,7 @@ import it.unibo.sentinel.control.serialization.Codec.Validation
 import it.unibo.sentinel.control.serialization.converters.PositionConverter
 import it.unibo.sentinel.core.warehouse.Tile
 import it.unibo.sentinel.core.simulation.Tick
+import it.unibo.sentinel.control.serialization.Codec.validate
 
 /** Schema of a [[Tile]].
   */
@@ -45,8 +46,3 @@ case class WarehouseSchema(
     validate(outOfBounds.isEmpty):
       Validation.WarehouseValidation:
         Warehouse.Validation.TilesOutOfBounds(outOfBounds, width, height)
-
-  private def validate(condition: Boolean)(
-      error: Validation
-  ): Either[Validation, Unit] =
-    Either.cond(condition, (), error)

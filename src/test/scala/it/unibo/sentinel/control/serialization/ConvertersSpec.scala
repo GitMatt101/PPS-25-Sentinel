@@ -5,9 +5,10 @@ import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Tile}
 import it.unibo.sentinel.control.serialization.schemas.*
 import it.unibo.sentinel.control.serialization.converters.*
 import it.unibo.sentinel.core.simulation.Tick
+import it.unibo.sentinel.core.mission.{Mission, MissionId}
 import it.unibo.sentinel.core.scenario.Spawn
 import it.unibo.sentinel.core.robot.RobotId
-import it.unibo.sentinel.core.mission.{Mission, MissionId}
+import it.unibo.sentinel.core.scenario.Policies.*
 
 class ConvertersSpec extends UnitTest:
 
@@ -30,13 +31,6 @@ class ConvertersSpec extends UnitTest:
       WarehouseConverter
     )
 
-  "A SpawnConverter" when:
-    behave like basicConverter(
-      model = Spawn(RobotId("R1"), Position(1, 1)),
-      schema = SpawnSchema("R1", PositionSchema(1, 1)),
-      converter = SpawnConverter
-    )
-
   "A MissionConverter" when:
     behave like basicConverter(
       model = Mission.relocate(MissionId("M1"), Position(5, 5), Tick(10)),
@@ -46,6 +40,48 @@ class ConvertersSpec extends UnitTest:
         10
       ),
       converter = MissionConverter
+    )
+
+  "A ScenarioConverter" when:
+    val spawnModel = Spawn(RobotId("R1"), Position(1, 1))
+    val spawnSchema = SpawnSchema("R1", PositionSchema(1, 1))
+    val missionModel =
+      Mission.relocate(MissionId("M1"), Position(5, 5), Tick(10))
+    val missionSchema = MissionSchema(
+      "M1",
+      TaskSchema.Single(ActionSchema.Move(PositionSchema(5, 5))),
+      10
+    )
+
+    val routingPolicy: Routing = Routing.Distance
+    val assignmentPolicy: Assignment = Assignment.Nearest
+    val collisionSelectionPolicy: CollisionSelection = CollisionSelection.Random
+    val collisionAvoidancePolicy: CollisionAvoidance = CollisionAvoidance.Wait
+
+    val model = ScenarioSubstitute(
+      "path/to/warehouse.json",
+      Seq(spawnModel),
+      Seq(missionModel),
+      routingPolicy,
+      assignmentPolicy,
+      collisionSelectionPolicy,
+      collisionAvoidancePolicy
+    )
+
+    val schema = ScenarioSchema(
+      "path/to/warehouse.json",
+      Seq(spawnSchema),
+      Seq(missionSchema),
+      routingPolicy,
+      assignmentPolicy,
+      collisionSelectionPolicy,
+      collisionAvoidancePolicy
+    )
+
+    behave like basicConverter(
+      model = model,
+      schema = schema,
+      converter = ScenarioConverter
     )
 
   private def basicConverter[M, S](

@@ -9,35 +9,35 @@ import it.unibo.sentinel.core.simulation.Tick
 
 object MissionConverter extends Converter[Mission, MissionSchema]:
 
-  given Converter[Action, ActionSchema] with
+  private given actionConverter: Converter[Action, ActionSchema] =
+    new Converter[Action, ActionSchema]:
 
-    override def toSchema(model: Action): ActionSchema = model match
-      case Action.Move(target) =>
-        ActionSchema.Move(PositionConverter.toSchema(target))
+      override def toSchema(model: Action): ActionSchema = model match
+        case Action.Move(target) =>
+          ActionSchema.Move(PositionConverter.toSchema(target))
 
-    override def toDomain(schema: ActionSchema): Action = schema match
-      case ActionSchema.Move(to) => Action.Move(PositionConverter.toDomain(to))
+      override def toDomain(schema: ActionSchema): Action = schema match
+        case ActionSchema.Move(to) =>
+          Action.Move(PositionConverter.toDomain(to))
 
-  given Converter[Task, TaskSchema] with
+  private given taskConverter: Converter[Task, TaskSchema] =
+    new Converter[Task, TaskSchema]:
 
-    override def toSchema(model: Task): TaskSchema = model match
-      case Task.Single(action) =>
-        TaskSchema.Single(
-          summon[Converter[Action, ActionSchema]].toSchema(action)
-        )
-      case Task.Done =>
-        TaskSchema.Done
+      override def toSchema(model: Task): TaskSchema = model match
+        case Task.Single(action) =>
+          TaskSchema.Single(actionConverter.toSchema(action))
+        case Task.Done => TaskSchema.Done
 
-    override def toDomain(schema: TaskSchema): Task = schema match
-      case TaskSchema.Single(action) =>
-        Task.Single(summon[Converter[Action, ActionSchema]].toDomain(action))
-      case TaskSchema.Done =>
-        Task.Done
+      override def toDomain(schema: TaskSchema): Task = schema match
+        case TaskSchema.Single(action) =>
+          Task.Single(actionConverter.toDomain(action))
+        case TaskSchema.Done =>
+          Task.Done
 
   override def toSchema(model: Mission): MissionSchema =
     MissionSchema(
       model.id.value,
-      summon[Converter[Task, TaskSchema]].toSchema(model.task),
+      taskConverter.toSchema(model.task),
       model.deadline.value
     )
 
@@ -54,6 +54,6 @@ object MissionConverter extends Converter[Mission, MissionSchema]:
           case TaskSchema.Done =>
             Mission(
               MissionId(id),
-              summon[Converter[Task, TaskSchema]].toDomain(task),
+              taskConverter.toDomain(task),
               Tick(duration)
             )

@@ -70,3 +70,11 @@ object Codec:
     /** Mission generation error.
       */
     case MissionValidation(error: Mission.Validation)
+    /** Scenario generation error.
+      */
+    case ScenarioValidation(error: it.unibo.sentinel.core.scenario.Validation)
+  
+  def validate(condition: Boolean)(
+      error: Validation
+  ): Either[Validation, Unit] =
+    Either.cond(condition, (), error)
