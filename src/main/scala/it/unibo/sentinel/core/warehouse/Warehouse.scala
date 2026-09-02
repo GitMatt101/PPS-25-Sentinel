@@ -129,6 +129,10 @@ trait Warehouse:
     */
   def withoutTile(position: Position): Warehouse
 
+  /** @return
+    *   a [[Seq]] of tuples of [[Position]] and [[Tile]], representing the map
+    *   of tiles as a list.
+    */
   def tiles: Seq[(Position, Tile)]
 
   /** @param position
@@ -146,6 +150,17 @@ trait Warehouse:
     neighbors(position).filter(isTraversable)
 
 object Warehouse:
+
+  /** Validation error generated when creating a warehouse.
+    */
+  enum Validation:
+    /** The warehouse's size is invalid (`<= 0`).
+      */
+    case InvalidSize(width: Int, height: Int)
+    /** Some tiles are out of bounds.
+      */
+    case TilesOutOfBounds(positions: Seq[Position], width: Int, height: Int)
+
   /** @param width
     *   the width of the warehouse.
     * @param height
