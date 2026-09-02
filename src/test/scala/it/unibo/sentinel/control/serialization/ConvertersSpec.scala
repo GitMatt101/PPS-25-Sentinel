@@ -14,6 +14,10 @@ import it.unibo.sentinel.control.serialization.converters.{
 }
 import it.unibo.sentinel.core.simulation.Tick
 import it.unibo.sentinel.core.warehouse.Warehouse
+import it.unibo.sentinel.core.scenario.Spawn
+import it.unibo.sentinel.core.robot.RobotId
+import it.unibo.sentinel.control.serialization.schemas.SpawnSchema
+import it.unibo.sentinel.control.serialization.converters.SpawnConverter
 
 class ConvertersSpec extends UnitTest:
 
@@ -41,6 +45,13 @@ class ConvertersSpec extends UnitTest:
       model = model,
       schema = schema,
       WarehouseConverter
+    )
+
+  "A SpawnConverter" when:
+    behave like basicConverter(
+      model = Spawn(RobotId("R1"), Position(1, 1)),
+      schema = SpawnSchema("R1", PositionSchema(1, 1)),
+      converter = SpawnConverter
     )
 
   private def basicConverter[M, S](
