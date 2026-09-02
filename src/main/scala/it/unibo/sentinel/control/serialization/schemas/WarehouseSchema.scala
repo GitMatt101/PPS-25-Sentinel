@@ -5,12 +5,13 @@ import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.control.serialization.Codec.Validation
 import it.unibo.sentinel.control.serialization.converters.PositionConverter
 
+/** Schema of a [[Warehouse]].
+  */
 case class WarehouseSchema(
     width: Int,
     height: Int,
     tiles: Seq[(PositionSchema, TileSchema)]
-) extends Schema[Warehouse]:
-  override type Self = WarehouseSchema
+) extends Schema:
 
   override def validated: Either[Validation, WarehouseSchema] =
     for

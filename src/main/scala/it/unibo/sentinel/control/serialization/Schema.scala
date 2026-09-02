@@ -5,8 +5,7 @@ import it.unibo.sentinel.control.serialization.Codec.Validation
 /** Intermediate model between `Sentinel`'s domain and an external serialization
   * tool.
   */
-trait Schema[Model]:
-  type Self <: Schema[Model]
+trait Schema:
 
   /** Validates the schema.
     *
@@ -14,4 +13,4 @@ trait Schema[Model]:
     *   an `Either` containing a [[Validation]] error on `Left`, or the valid
     *   schema on `Right`
     */
-  def validated: Either[Validation, Self]
+  def validated: Either[Validation, Schema]

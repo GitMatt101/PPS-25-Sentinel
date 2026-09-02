@@ -4,7 +4,8 @@ import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Tile, Area}
 import it.unibo.sentinel.core.simulation.Tick
 import it.unibo.sentinel.control.serialization.Codec.Validation
-import it.unibo.sentinel.control.serialization.schemas.WarehouseSchema
+import it.unibo.sentinel.control.serialization.Codec
+import it.unibo.sentinel.control.serialization.JsonCodecs.given
 
 class WarehouseJsonCodecSpec extends UnitTest:
 
@@ -13,7 +14,7 @@ class WarehouseJsonCodecSpec extends UnitTest:
     .withArea(Area(Position(1, 1), Position(2, 2))):
       Tile.Floor(Tick.unit)
 
-  val codec = summon[JsonCodec[Warehouse, WarehouseSchema]]
+  val codec = summon[Codec[Warehouse]]
   private val validJsonInput: String = codec.encode(correctWarehouse)
 
   "The WarehouseJsonCodec" should:

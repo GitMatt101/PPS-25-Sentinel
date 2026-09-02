@@ -5,8 +5,9 @@ import it.unibo.sentinel.core.warehouse.Tile
 import it.unibo.sentinel.control.serialization.Codec.Validation
 import it.unibo.sentinel.core.simulation.Tick
 
-enum TileSchema extends Schema[Tile]:
-  override type Self = TileSchema
+/** Schema of a [[Tile]].
+  */
+enum TileSchema extends Schema:
 
   case Floor(cost: Int)
 
