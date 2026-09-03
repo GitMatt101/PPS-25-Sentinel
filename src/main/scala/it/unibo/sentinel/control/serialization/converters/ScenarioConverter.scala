@@ -7,22 +7,10 @@ import it.unibo.sentinel.control.serialization.schemas.SpawnSchema
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.robot.value
 import it.unibo.sentinel.core.mission.Mission
-import it.unibo.sentinel.core.scenario.Policies.Routing
-import it.unibo.sentinel.core.scenario.Policies.Assignment
-import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
-import it.unibo.sentinel.core.scenario.Policies.CollisionAvoidance
+import it.unibo.sentinel.core.warehouse.Warehouse
+import it.unibo.sentinel.core.scenario.Scenario
 
-case class ScenarioSubstitute(
-    warehousePath: String,
-    spawns: Seq[Spawn],
-    missions: Seq[Mission],
-    routing: Routing,
-    assignment: Assignment,
-    collisionSelection: CollisionSelection,
-    collisionAvoidance: CollisionAvoidance
-)
-
-object ScenarioConverter extends Converter[ScenarioSubstitute, ScenarioSchema]:
+object ScenarioConverter:
 
   private given spawnConverter: Converter[Spawn, SpawnSchema] =
     new Converter[Spawn, SpawnSchema]:
@@ -33,24 +21,31 @@ object ScenarioConverter extends Converter[ScenarioSubstitute, ScenarioSchema]:
       override def toDomain(schema: SpawnSchema): Spawn =
         Spawn(RobotId(schema.id), PositionConverter.toDomain(schema.position))
 
-  override def toSchema(model: ScenarioSubstitute): ScenarioSchema =
-    ScenarioSchema(
-      model.warehousePath,
-      model.spawns.map(spawnConverter.toSchema),
-      model.missions.map(MissionConverter.toSchema),
-      model.routing,
-      model.assignment,
-      model.collisionSelection,
-      model.collisionAvoidance
-    )
+  given (using warehouse: Warehouse): Converter[Scenario, ScenarioSchema] with
 
-  override def toDomain(schema: ScenarioSchema): ScenarioSubstitute =
-    ScenarioSubstitute(
-      schema.warehousePath,
-      schema.spawns.map(spawnConverter.toDomain),
-      schema.missions.map(MissionConverter.toDomain),
-      schema.routing,
-      schema.assignment,
-      schema.collisionSelection,
-      schema.collisionAvoidance
-    )
+    override def toSchema(model: Scenario): ScenarioSchema =
+      ScenarioSchema(
+        ???,
+        model.spawns.map(spawnConverter.toSchema),
+        model.missions.map(MissionConverter.toSchema),
+        model.routing,
+        model.assignment,
+        model.collisionSelection,
+        model.collisionAvoidance
+      )
+
+    override def toDomain(schema: ScenarioSchema): Scenario =
+      var scenario = Scenario.in(warehouse)
+      for
+        spawn <- schema.spawns.map(spawnConverter.toDomain)
+        step <- scenario.place(spawn)
+      do scenario = step
+      for
+        mission <- schema.missions.map(MissionConverter.toDomain)
+        step <- scenario.load(mission)
+      do scenario = step
+      scenario
+        .withRouting(schema.routing)
+        .withAssignment(schema.assignment)
+        .withCollisionSelection(schema.collisionSelection)
+        .withCollisionAvoidance(schema.collisionAvoidance)

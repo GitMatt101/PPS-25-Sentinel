@@ -10,7 +10,6 @@ import it.unibo.sentinel.control.serialization.converters.WarehouseConverter
 import it.unibo.sentinel.control.serialization.schemas.PositionSchema
 import it.unibo.sentinel.control.serialization.schemas.TileSchema
 import it.unibo.sentinel.control.serialization.schemas.ScenarioSchema
-import it.unibo.sentinel.control.serialization.converters.ScenarioSubstitute
 import it.unibo.sentinel.control.serialization.converters.ScenarioConverter
 import it.unibo.sentinel.control.serialization.schemas.SpawnSchema
 import it.unibo.sentinel.control.serialization.schemas.MissionSchema
@@ -20,6 +19,7 @@ import it.unibo.sentinel.core.scenario.Policies.Routing
 import it.unibo.sentinel.core.scenario.Policies.Assignment
 import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
 import it.unibo.sentinel.core.scenario.Policies.CollisionAvoidance
+import it.unibo.sentinel.core.scenario.Scenario
 
 object JsonSerialization:
 
@@ -42,7 +42,6 @@ object JsonSerialization:
         Validation.Syntax(e.getMessage())
 
   given Converter[Warehouse, WarehouseSchema] = WarehouseConverter
-  given Converter[ScenarioSubstitute, ScenarioSchema] = ScenarioConverter
   given ReadWriter[PositionSchema] = macroRW
   given ReadWriter[TileSchema.Floor] = macroRW
   given ReadWriter[TileSchema] = macroRW
@@ -66,5 +65,9 @@ object JsonSerialization:
   given ReadWriter[ScenarioSchema] = macroRW
 
   given Codec[Warehouse] = new JsonCodec[Warehouse, WarehouseSchema] {}
-  
-  given Codec[ScenarioSubstitute] = new JsonCodec[ScenarioSubstitute, ScenarioSchema] {}
+
+  given (using warehouse: Warehouse): Converter[Scenario, ScenarioSchema] = 
+    ScenarioConverter.given_Converter_Scenario_ScenarioSchema
+
+  given (using warehouse: Warehouse): Codec[Scenario] =
+    new JsonCodec[Scenario, ScenarioSchema] {}
