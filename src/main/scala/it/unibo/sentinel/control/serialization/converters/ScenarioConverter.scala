@@ -11,6 +11,8 @@ import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.core.scenario.Scenario
 import it.unibo.sentinel.control.serialization.Repository
 import it.unibo.sentinel.control.serialization.Codec.Validation
+import it.unibo.sentinel.control.serialization.schemas.MissionSchema
+import it.unibo.sentinel.core.scenario.Validation as ScenarioValidation
 
 object ScenarioConverter:
 
@@ -24,7 +26,13 @@ object ScenarioConverter:
         for pos <- PositionConverter.toDomain(schema.position)
         yield Spawn(RobotId(schema.id), pos)
 
-  given (using repo: Repository[String, Warehouse], warehousePath: String): Converter[
+  private given missionConverter: Converter[Mission, MissionSchema] =
+    MissionConverter
+
+  given (using
+      repo: Repository[String, Warehouse],
+      warehousePath: String
+  ): Converter[
     Scenario,
     ScenarioSchema
   ] with
@@ -33,7 +41,7 @@ object ScenarioConverter:
       ScenarioSchema(
         warehousePath,
         model.spawns.map(spawnConverter.toSchema),
-        model.missions.map(MissionConverter.toSchema),
+        model.missions.map(missionConverter.toSchema),
         model.routing,
         model.assignment,
         model.collisionSelection,
@@ -45,19 +53,27 @@ object ScenarioConverter:
     ): Either[Validation, Scenario] =
       repo.load(schema.warehousePath).map { warehouse =>
         var scenario = Scenario.in(warehouse)
-        for
-          either <- schema.spawns.map(spawnConverter.toDomain)
-          spawn <- either
-          step <- scenario.place(spawn)
-        do scenario = step
-        for
-          either <- schema.missions.map(MissionConverter.toDomain)
-          mission <- either
-          step <- scenario.load(mission)
-        do scenario = step
+        scenario = loadValues[Spawn, SpawnSchema](scenario, schema.spawns) {
+          (s, spawn) => s.place(spawn)
+        }
+        scenario =
+          loadValues[Mission, MissionSchema](scenario, schema.missions) {
+            (s, mission) => s.load(mission)
+          }
         scenario
           .withRouting(schema.routing)
           .withAssignment(schema.assignment)
           .withCollisionSelection(schema.collisionSelection)
           .withCollisionAvoidance(schema.collisionAvoidance)
       }
+
+    private def loadValues[A, B](start: Scenario, values: Seq[B])(
+        stepper: (Scenario, A) => Either[ScenarioValidation, Scenario]
+    )(using converter: Converter[A, B]): Scenario =
+      var scenario: Scenario = start
+      for
+        either <- values.map(converter.toDomain)
+        value <- either
+        step <- stepper(scenario, value)
+      do scenario = step
+      scenario
