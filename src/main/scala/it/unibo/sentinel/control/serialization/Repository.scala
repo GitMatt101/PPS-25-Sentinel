@@ -40,6 +40,13 @@ trait Repository[Key, M]:
     */
   def load(key: Key): Either[Validation, M]
 
+object FileRepository:
+
+  final val root: String = sys.props("user.home")
+  final val folderPath: Path = Paths.get(root, ".sentinel")
+
+  extension (path: String) def inRoot: Path = folderPath.resolve(path)
+
 trait FileRepository[M: Codec] extends Repository[String, M]:
 
   def save(model: M, fileName: String): Either[Validation, Unit] =
@@ -54,13 +61,13 @@ trait FileRepository[M: Codec] extends Repository[String, M]:
       data: String,
       fileName: String
   ): Either[Validation, Unit] =
-    val root: String = sys.props("user.home")
-    val folderPath: Path = Paths.get(root, ".sentinel")
-    val filePath: Path = folderPath.resolve(fileName)
+    import it.unibo.sentinel.control.serialization.FileRepository.inRoot
+    val folder = FileRepository.folderPath
     Try {
-      if !Files.exists(folderPath) then Files.createDirectories(folderPath)
+      if !Files.exists(folder) then
+        Files.createDirectories(folder)
       Files.writeString(
-        filePath,
+        fileName.inRoot,
         data,
         StandardCharsets.UTF_8,
         StandardOpenOption.CREATE_NEW,
@@ -68,7 +75,7 @@ trait FileRepository[M: Codec] extends Repository[String, M]:
       )
       ()
     }.toEither.left.map { case _: FileAlreadyExistsException =>
-      Validation.FileAlreadyExists(filePath.toString)
+      Validation.FileAlreadyExists(fileName.inRoot.toString)
     }
 
   private def readFromFile(filePath: String): Either[Validation, String] =
