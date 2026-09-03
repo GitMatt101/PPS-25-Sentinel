@@ -11,7 +11,7 @@ class RobotWithQueueSpec extends UnitTest with RobotFixture with RobotBehavior:
     behave like baseRobot(Robot.drone(robotId, capacity))
 
     "does not have a full queue" should:
-      
+
       "be able to accept multiple missions" in:
         val robot = Robot.drone(robotId, capacity)
         val mission = MissionId("M")

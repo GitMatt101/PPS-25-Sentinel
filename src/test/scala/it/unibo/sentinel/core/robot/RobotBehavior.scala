@@ -52,7 +52,7 @@ trait RobotBehavior extends RobotFixture:
         val previous = robot.status
         robot.pause()
         robot.status shouldBe previous
-    
+
     "has a mission" should:
 
       "be ready to start it" in:
