@@ -42,11 +42,18 @@ trait Repository[Key, M]:
 
 object FileRepository:
 
+  /** Root directory of the file system.
+    */
   final val root: String = sys.props("user.home")
+
+  /** Standard sentinel folder in the root directory
+    */
   final val folderPath: Path = Paths.get(root, ".sentinel")
 
   extension (path: String) def inRoot: Path = folderPath.resolve(path)
 
+/** Repository that uses the file system to store and load data.
+  */
 trait FileRepository[M: Codec] extends Repository[String, M]:
 
   def save(model: M, fileName: String): Either[Validation, Unit] =
