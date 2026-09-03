@@ -39,10 +39,13 @@ case class WarehouseSchema(
         Warehouse.Validation.InvalidSize(width, height)
 
   private def validateBounds: Either[Validation, Unit] =
-    val outOfBounds = tiles
-      .map(p => PositionConverter.toDomain(p._1))
-      .filter: pos =>
-        pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height
-    validate(outOfBounds.isEmpty):
-      Validation.WarehouseValidation:
-        Warehouse.Validation.TilesOutOfBounds(outOfBounds, width, height)
+    val converted = tiles.map(p => PositionConverter.toDomain(p._1)).toList
+    converted.collectFirst { case Left(err) => err } match
+      case Some(validationError) => Left(validationError)
+      case None =>
+        val positions = converted.collect { case Right(pos) => pos }
+        val outOfBounds = positions.filter: pos =>
+          pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height
+        validate(outOfBounds.isEmpty):
+          Validation.WarehouseValidation:
+            Warehouse.Validation.TilesOutOfBounds(outOfBounds, width, height)

@@ -48,4 +48,4 @@ class ConvertersSpec extends UnitTest:
       converter.toSchema(model) shouldBe schema
 
     "convert from schema to domain model correctly" in:
-      converter.toDomain(schema) shouldBe model
+      converter.toDomain(schema) shouldBe Right(model)

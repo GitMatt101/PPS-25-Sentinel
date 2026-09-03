@@ -1,5 +1,7 @@
 package it.unibo.sentinel.control.serialization
 
+import it.unibo.sentinel.control.serialization.Codec.Validation
+
 /** Converts between domain models and their corresponding serializable schemas.
   *
   * @tparam Model
@@ -15,4 +17,4 @@ trait Converter[Model, ModelSchema]:
 
   /** Reconstructs a domain model from its schema.
     */
-  def toDomain(schema: ModelSchema): Model
+  def toDomain(schema: ModelSchema): Either[Validation, Model]

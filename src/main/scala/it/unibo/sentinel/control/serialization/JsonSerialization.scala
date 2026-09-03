@@ -33,7 +33,7 @@ object JsonSerialization:
     override def decode(input: String): Either[Validation, Model] =
       parseJson(input)
         .flatMap(schema => schema.validated.map(_ => schema))
-        .map(converter.toDomain)
+        .flatMap(converter.toDomain)
 
     protected def parseJson(
         input: String
@@ -66,8 +66,8 @@ object JsonSerialization:
 
   given Codec[Warehouse] = new JsonCodec[Warehouse, WarehouseSchema] {}
 
-  given (using warehouse: Warehouse): Converter[Scenario, ScenarioSchema] = 
+  given (using repo: Repository[String, Warehouse]): Converter[Scenario, ScenarioSchema] = 
     ScenarioConverter.given_Converter_Scenario_ScenarioSchema
 
-  given (using warehouse: Warehouse): Codec[Scenario] =
+  given (using repo: Repository[String, Warehouse]): Codec[Scenario] =
     new JsonCodec[Scenario, ScenarioSchema] {}

@@ -38,25 +38,30 @@ final case class ScenarioSchema(
       _ <- missions.validateAll
       _ <- checkUniqueBy(spawns)(
         _.id,
-        id => DomainValidation.RobotAlreadyExists(RobotId(id))
+        id => Validation.ScenarioValidation:
+          DomainValidation.RobotAlreadyExists(RobotId(id))
       )
       _ <- checkUniqueBy(spawns)(
         _.position,
         pos =>
-          DomainValidation.PositionOccupied(PositionConverter.toDomain(pos))
+          PositionConverter.toDomain(pos) match
+            case Left(validation) => validation
+            case Right(value) => Validation.ScenarioValidation:
+              DomainValidation.PositionOccupied(value)
       )
       _ <- checkUniqueBy(missions)(
         _.id,
-        id => DomainValidation.MissionAlreadyExists(MissionId(id))
+        id => Validation.ScenarioValidation:
+          DomainValidation.MissionAlreadyExists(MissionId(id))
       )
     yield this
 
   private def checkUniqueBy[A, Key](items: Seq[A])(
       extractKey: A => Key,
-      makeDomainError: Key => DomainValidation
+      makeError: Key => Validation
   ): Either[Validation, Unit] =
     items.map(extractKey).getFirstDuplicate match
       case Some(duplicateKey) =>
-        Left(Validation.ScenarioValidation(makeDomainError(duplicateKey)))
+        Left(makeError(duplicateKey))
       case None =>
         Right(())
