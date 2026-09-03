@@ -4,6 +4,7 @@ import it.unibo.sentinel.core.mission.MissionId
 import it.unibo.sentinel.core.routing.Path
 import it.unibo.sentinel.core.warehouse.Position
 import it.unibo.sentinel.core.simulation.Tick
+import scala.collection.immutable.Queue
 
 /** Abstracts the concept of a robot, which is an entity capable of accepting
   * and executing missions while moving through the [[Warehouse]]
@@ -80,6 +81,25 @@ trait Robot:
     */
   def tick(): Unit
 
+trait Queued(capacity: Int) extends Robot:
+
+  private var backlog: Queue[MissionId] = Queue.empty
+
+  abstract override def canAccept: Boolean = backlog.size < capacity
+
+  abstract override def accept(mission: MissionId): Unit =
+    if canAccept then
+      backlog = backlog :+ mission
+      super.accept(mission)
+
+  override def mission: Option[MissionId] = backlog.headOption
+
+  abstract override def release(): Unit =
+    backlog = backlog match
+      case _ +: tail => tail
+      case _         => Queue.empty
+    super.release()
+
 object Robot:
   /** @param id
     *   the robot's identifier
@@ -87,6 +107,9 @@ object Robot:
     *   a new robot with the given id, no missions and idle status
     */
   def apply(id: RobotId): Robot = new SimpleRobot(id)
+
+  def withQueue(id: RobotId, capacity: Int): Robot = new SimpleRobot(id)
+    with Queued(capacity)
 
   /** Implementation of a [[Robot]] that can accept one mission
     */
@@ -101,7 +124,7 @@ object Robot:
     override def status: RobotStatus =
       if _waiting then RobotStatus.Waiting
       else
-        (currentMission, currentPath) match
+        (mission, currentPath) match
           case (None, None)    => RobotStatus.Idle
           case (Some(_), None) => RobotStatus.Ready
           case (_, Some(_))    => RobotStatus.Moving
