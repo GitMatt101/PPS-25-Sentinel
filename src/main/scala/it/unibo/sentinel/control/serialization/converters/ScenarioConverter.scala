@@ -24,14 +24,14 @@ object ScenarioConverter:
         for pos <- PositionConverter.toDomain(schema.position)
         yield Spawn(RobotId(schema.id), pos)
 
-  given (using repo: Repository[String, Warehouse]): Converter[
+  given (using repo: Repository[String, Warehouse], warehousePath: String): Converter[
     Scenario,
     ScenarioSchema
   ] with
 
     override def toSchema(model: Scenario): ScenarioSchema =
       ScenarioSchema(
-        ???,
+        warehousePath,
         model.spawns.map(spawnConverter.toSchema),
         model.missions.map(MissionConverter.toSchema),
         model.routing,
