@@ -13,7 +13,7 @@ object Tile:
   enum Validation:
     /** The cost of the tile is negative.
       */
-    case NegativeCost(cost: Tick)
+    case NegativeCost(cost: Int)
 
   /** Represents a floor tile.
     */

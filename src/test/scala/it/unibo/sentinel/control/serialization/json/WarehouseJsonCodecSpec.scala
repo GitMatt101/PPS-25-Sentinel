@@ -36,10 +36,9 @@ class WarehouseJsonCodecSpec extends UnitTest:
     "return SyntaxError when given invalid JSON syntax" in:
       val malformedJson = """{ "width": 4, "height": 4, "tiles": """
       val result = codec.decode(malformedJson)
-      result should matchPattern { case Left(Validation.Syntax(_)) =>
-      }
+      result should matchPattern { case Left(Validation.Syntax(_)) => }
 
-    "return WarehouseSerializationError(InvalidDimensions) when dimensions are non-positive" in:
+    "return WarehouseValidation(InvalidSize) when dimensions are non-positive" in:
       val invalidDimJson =
         """{
           |  "width": 0,
@@ -53,7 +52,7 @@ class WarehouseJsonCodecSpec extends UnitTest:
         )
       )
 
-    "return WarehouseSerializationError(PositionOutOfBounds) when a tile position is out of grid bounds" in:
+    "return WarehouseValidation(TilesOutOfBounds) when a tile position is out of grid bounds" in:
       val outOfBoundsJson =
         """{
           |  "width": 1,
@@ -67,4 +66,20 @@ class WarehouseJsonCodecSpec extends UnitTest:
         Validation.WarehouseValidation(
           Warehouse.Validation.TilesOutOfBounds(Seq(Position(5, 5)), 1, 1)
         )
+      )
+
+    "return TileValidation(NegativeCost) when a tile has a negative cost" in:
+      val cost: Int = -5
+      val negativeCostJson =
+        s"""{
+          |  "width": 4,
+          |  "height": 4,
+          |  "tiles": [
+          |    [{"x": 1, "y": 1}, {"$$type": "Floor", "cost": $cost}]
+          |  ]
+          |}""".stripMargin
+      val result = codec.decode(negativeCostJson)
+      result shouldBe Left(
+        Validation.TileValidation:
+          Tile.Validation.NegativeCost(cost)
       )

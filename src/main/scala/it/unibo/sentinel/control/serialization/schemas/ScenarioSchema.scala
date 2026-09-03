@@ -10,13 +10,7 @@ import it.unibo.sentinel.core.scenario.Policies.Routing
 import it.unibo.sentinel.core.scenario.Policies.Assignment
 import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
 import it.unibo.sentinel.core.scenario.Policies.CollisionAvoidance
-
-extension (schemas: Seq[Schema])
-  private def validateAll: Either[Validation, Unit] =
-    schemas.iterator
-      .map(_.validated)
-      .collectFirst { case Left(err) => err }
-      .toLeft(())
+import it.unibo.sentinel.control.serialization.validateAll
 
 extension [A](seq: Seq[A])
   private def getFirstDuplicate: Option[A] =

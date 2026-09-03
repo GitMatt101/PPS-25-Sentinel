@@ -5,8 +5,8 @@ import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.control.serialization.Codec.Validation
 import it.unibo.sentinel.control.serialization.converters.PositionConverter
 import it.unibo.sentinel.core.warehouse.Tile
-import it.unibo.sentinel.core.simulation.Tick
 import it.unibo.sentinel.control.serialization.Codec.validate
+import it.unibo.sentinel.control.serialization.validateAll
 
 /** Schema of a [[Tile]].
   */
@@ -16,7 +16,7 @@ enum TileSchema extends Schema:
 
   override def validated: Either[Validation, TileSchema] = this match
     case Floor(cost) if cost < 0 =>
-      Left(Validation.TileValidation(Tile.Validation.NegativeCost(Tick(cost))))
+      Left(Validation.TileValidation(Tile.Validation.NegativeCost(cost)))
     case _ => Right(this)
 
 /** Schema of a [[Warehouse]].
@@ -29,6 +29,7 @@ case class WarehouseSchema(
 
   override def validated: Either[Validation, WarehouseSchema] =
     for
+      _ <- tiles.map(_._2).validateAll
       _ <- validateSize
       _ <- validateBounds
     yield this

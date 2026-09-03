@@ -14,3 +14,10 @@ trait Schema:
     *   schema on `Right`
     */
   def validated: Either[Validation, Schema]
+
+extension (schemas: Seq[Schema])
+  private def validateAll: Either[Validation, Unit] =
+    schemas.iterator
+      .map(_.validated)
+      .collectFirst { case Left(err) => err }
+      .toLeft(())
