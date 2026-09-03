@@ -42,7 +42,7 @@ case class WarehouseSchema(
     val converted = tiles.map(p => PositionConverter.toDomain(p._1)).toList
     converted.collectFirst { case Left(err) => err } match
       case Some(validationError) => Left(validationError)
-      case None =>
+      case None                  =>
         val positions = converted.collect { case Right(pos) => pos }
         val outOfBounds = positions.filter: pos =>
           pos.x < 0 || pos.x >= width || pos.y < 0 || pos.y >= height

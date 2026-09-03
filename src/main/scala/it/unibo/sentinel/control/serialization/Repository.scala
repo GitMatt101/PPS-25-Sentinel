@@ -64,8 +64,7 @@ trait FileRepository[M: Codec] extends Repository[String, M]:
     import it.unibo.sentinel.control.serialization.FileRepository.inRoot
     val folder = FileRepository.folderPath
     Try {
-      if !Files.exists(folder) then
-        Files.createDirectories(folder)
+      if !Files.exists(folder) then Files.createDirectories(folder)
       Files.writeString(
         fileName.inRoot,
         data,

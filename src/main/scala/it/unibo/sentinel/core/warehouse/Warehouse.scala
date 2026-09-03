@@ -157,6 +157,7 @@ object Warehouse:
     /** The warehouse's size is invalid (`<= 0`).
       */
     case InvalidSize(width: Int, height: Int)
+
     /** Some tiles are out of bounds.
       */
     case TilesOutOfBounds(positions: Seq[Position], width: Int, height: Int)

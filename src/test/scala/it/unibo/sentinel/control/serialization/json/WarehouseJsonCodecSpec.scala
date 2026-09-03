@@ -36,8 +36,7 @@ class WarehouseJsonCodecSpec extends UnitTest:
     "return SyntaxError when given invalid JSON syntax" in:
       val malformedJson = """{ "width": 4, "height": 4, "tiles": """
       val result = codec.decode(malformedJson)
-      result should matchPattern {
-        case Left(Validation.Syntax(_)) =>
+      result should matchPattern { case Left(Validation.Syntax(_)) =>
       }
 
     "return WarehouseSerializationError(InvalidDimensions) when dimensions are non-positive" in:

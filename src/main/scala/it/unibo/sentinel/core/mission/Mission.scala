@@ -127,6 +127,7 @@ object Mission:
     /** The mission has a negative duration.
       */
     case NegativeDuration(id: MissionId, duration: Int)
+
     /** The mission is already completed when created.
       */
     case AlreadyCompleted(id: MissionId)

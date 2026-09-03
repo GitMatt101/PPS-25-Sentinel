@@ -15,8 +15,9 @@ object WarehouseConverter extends Converter[Warehouse, WarehouseSchema]:
     override def toSchema(model: Tile): TileSchema = model match
       case Tile.Floor(cost) => TileSchema.Floor(cost.value)
 
-    override def toDomain(schema: TileSchema): Either[Validation, Tile] = schema match
-      case TileSchema.Floor(cost) => Right(Tile.Floor(Tick(cost)))
+    override def toDomain(schema: TileSchema): Either[Validation, Tile] =
+      schema match
+        case TileSchema.Floor(cost) => Right(Tile.Floor(Tick(cost)))
 
   override def toSchema(model: Warehouse): WarehouseSchema =
     val tilesMap = model.tiles.map: (pos, tile) =>
@@ -25,7 +26,9 @@ object WarehouseConverter extends Converter[Warehouse, WarehouseSchema]:
       (posSchema, tileSchema)
     WarehouseSchema(model.width, model.height, tilesMap)
 
-  override def toDomain(schema: WarehouseSchema): Either[Validation, Warehouse] =
+  override def toDomain(
+      schema: WarehouseSchema
+  ): Either[Validation, Warehouse] =
     var warehouse = Warehouse.empty(schema.width, schema.height)
     for
       (posSchema, tileSchema) <- schema.tiles

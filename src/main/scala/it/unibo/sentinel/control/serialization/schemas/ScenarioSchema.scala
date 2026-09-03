@@ -38,21 +38,24 @@ final case class ScenarioSchema(
       _ <- missions.validateAll
       _ <- checkUniqueBy(spawns)(
         _.id,
-        id => Validation.ScenarioValidation:
-          DomainValidation.RobotAlreadyExists(RobotId(id))
+        id =>
+          Validation.ScenarioValidation:
+            DomainValidation.RobotAlreadyExists(RobotId(id))
       )
       _ <- checkUniqueBy(spawns)(
         _.position,
         pos =>
           PositionConverter.toDomain(pos) match
             case Left(validation) => validation
-            case Right(value) => Validation.ScenarioValidation:
-              DomainValidation.PositionOccupied(value)
+            case Right(value)     =>
+              Validation.ScenarioValidation:
+                DomainValidation.PositionOccupied(value)
       )
       _ <- checkUniqueBy(missions)(
         _.id,
-        id => Validation.ScenarioValidation:
-          DomainValidation.MissionAlreadyExists(MissionId(id))
+        id =>
+          Validation.ScenarioValidation:
+            DomainValidation.MissionAlreadyExists(MissionId(id))
       )
     yield this
 

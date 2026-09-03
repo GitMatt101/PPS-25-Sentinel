@@ -55,31 +55,37 @@ trait Codec[Model] extends Encoder[Model], Decoder[Model]
 object Codec:
 
   /** Represents an error that can occur during serialization and/or
-  * deserialization.
-  */
+    * deserialization.
+    */
   enum Validation:
     /** The file was not found.
       */
     case FileNotFound(path: String)
+
     /** There is a file with the same name in the destination.
       */
     case FileAlreadyExists(name: String)
+
     /** Generic syntax (parsing) error.
       */
     case Syntax(error: String)
+
     /** Warehouse generation error.
       */
     case WarehouseValidation(error: Warehouse.Validation)
+
     /** Tile generation error.
       */
     case TileValidation(error: Tile.Validation)
+
     /** Mission generation error.
       */
     case MissionValidation(error: Mission.Validation)
+
     /** Scenario generation error.
       */
     case ScenarioValidation(error: it.unibo.sentinel.core.scenario.Validation)
-  
+
   def validate(condition: Boolean)(
       error: Validation
   ): Either[Validation, Unit] =
