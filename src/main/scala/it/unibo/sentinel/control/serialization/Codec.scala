@@ -58,6 +58,12 @@ object Codec:
   * deserialization.
   */
   enum Validation:
+    /** The file was not found.
+      */
+    case FileNotFound(path: String)
+    /** There is a file with the same name in the destination.
+      */
+    case FileAlreadyExists(name: String)
     /** Generic syntax (parsing) error.
       */
     case Syntax(error: String)
