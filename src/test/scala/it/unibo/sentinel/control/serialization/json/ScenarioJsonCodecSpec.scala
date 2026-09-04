@@ -6,8 +6,7 @@ import it.unibo.sentinel.core.warehouse.{
   Position,
   Tile,
   Area,
-  WarehouseId,
-  value
+  WarehouseId
 }
 import it.unibo.sentinel.core.simulation.Tick
 import it.unibo.sentinel.core.scenario.{Scenario, Spawn}
@@ -36,7 +35,7 @@ class ScenarioJsonCodecSpec extends UnitTest:
     .load(Mission.relocate(MissionId("M1"), Position(2, 2), Tick(10)))
     .getOrElse(fail("Could not load mission"))
 
-  given FileRepository[Warehouse] = new FileRepository[Warehouse](_.id.value)
+  given FileRepository[Warehouse] = new FileRepository[Warehouse]
   val codec: Codec[Scenario] = summon[Codec[Scenario]]
 
   "The ScenarioJsonCodec" should:

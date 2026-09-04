@@ -12,6 +12,7 @@ import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.scenario.Scenario
 import it.unibo.sentinel.core.scenario.Spawn
 import it.unibo.sentinel.core.simulation.Tick
+import it.unibo.sentinel.core.scenario.ScenarioId
 
 /** Contains default values for a test simulation
   */
@@ -54,4 +55,4 @@ object Dataset:
       )
     yield s8) match
       case Left(_)      => sys.exit(1)
-      case Right(value) => value
+      case Right(value) => value.withId(ScenarioId("s01"))

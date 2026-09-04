@@ -5,10 +5,12 @@ import it.unibo.sentinel.control.serialization.Codec.Validation
 import upickle.default.{ReadWriter, read, write, macroRW}
 import scala.util.Try
 import it.unibo.sentinel.core.warehouse.Warehouse
+import it.unibo.sentinel.core.warehouse.value
 import it.unibo.sentinel.control.serialization.schemas.*
 import it.unibo.sentinel.control.serialization.converters.*
 import it.unibo.sentinel.core.scenario.Policies.*
 import it.unibo.sentinel.core.scenario.Scenario
+import it.unibo.sentinel.core.scenario.value
 import it.unibo.sentinel.control.serialization.converters.ScenarioConverter.given
 
 object JsonSerialization:
@@ -55,6 +57,10 @@ object JsonSerialization:
 
   given Converter[Warehouse, WarehouseSchema] = WarehouseConverter
   given Codec[Warehouse] = new JsonCodec[Warehouse, WarehouseSchema]
+
+  given extension: String = ".json"
+  given scenarioId: (Warehouse => String) = (w: Warehouse) => w.id.value
+  given warehouseId: (Scenario => String) = (s: Scenario) => s.id.value
 
   given (using repo: FileRepository[Warehouse]): Codec[Scenario] =
     new JsonCodec[Scenario, ScenarioSchema]

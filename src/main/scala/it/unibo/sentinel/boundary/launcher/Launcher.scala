@@ -10,7 +10,6 @@ import it.unibo.sentinel.core.scenario.Scenario
 import it.unibo.sentinel.control.serialization.Repository
 import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.control.serialization.Codec.Validation
-import it.unibo.sentinel.core.warehouse.value
 
 /** Application launcher.w
   *
@@ -37,9 +36,9 @@ object Launcher:
     import it.unibo.sentinel.control.serialization.JsonSerialization.given
 
     given warehouseRepo: FileRepository[Warehouse] =
-      new FileRepository[Warehouse](_.id.value)
+      new FileRepository[Warehouse]
     val scenarioRepo: Repository[String, Scenario] =
-      new FileRepository[Scenario](_ => "scenario.json")
+      new FileRepository[Scenario]
     warehouseRepo.save(Dataset.warehouse)
     scenarioRepo.save(Dataset.scenario)
-    scenarioRepo.load("scenario.json")
+    scenarioRepo.load(s"${Dataset.scenario.id}.json")

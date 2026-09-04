@@ -41,12 +41,15 @@ object FileRepository:
 
 /** Repository that uses the file system to store and load data.
   */
-final class FileRepository[M: Codec](idExtractor: M => String)
-    extends Repository[String, M]:
+final class FileRepository[M: Codec](using
+    extension: String,
+    idExtractor: M => String
+) extends Repository[String, M]:
 
   override def save(model: M): Either[Validation, Unit] =
     val data = summon[Codec[M]].encode(model)
-    writeToFile(data, idExtractor(model))
+    val fileName = s"${idExtractor(model)}$extension"
+    writeToFile(data, fileName)
 
   override def load(fileName: String): Either[Validation, M] =
     readFromFile(fileName).flatMap:
@@ -62,7 +65,9 @@ final class FileRepository[M: Codec](idExtractor: M => String)
     }(Validation.FileAlreadyExists.apply)
 
   private def readFromFile(fileName: String): Either[Validation, String] =
-    operate(fileName)(path => os.read(path)):
+    val correctName: String =
+      if fileName.endsWith(extension) then fileName else s"$fileName$extension"
+    operate(correctName)(path => os.read(path)):
       Validation.FileNotFound.apply
 
   private def operate[A](fileName: String)(operation: os.Path => A)(
