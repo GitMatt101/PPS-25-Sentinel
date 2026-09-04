@@ -7,6 +7,14 @@ import it.unibo.sentinel.core.simulation.Tick
 sealed trait Tile
 
 object Tile:
+
+  /** Validation error generated when creating a [[Tile]].
+    */
+  enum Validation:
+    /** The cost of the tile is negative.
+      */
+    case NegativeCost(cost: Int)
+
   /** Represents a floor tile.
     */
   case class Floor(cost: Tick = Tick.unit) extends Tile
