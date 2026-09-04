@@ -56,8 +56,10 @@ final class FileRepository[M: Codec](idExtractor: M => String)
       data: String,
       fileName: String
   ): Either[Validation, Unit] =
-    operate(fileName)(path => os.write.over(path, data)):
-      Validation.FileAlreadyExists.apply
+    operate(fileName) { path =>
+      os.makeDir.all(FileRepository.folderPath)
+      os.write.over(path, data)
+    }(Validation.FileAlreadyExists.apply)
 
   private def readFromFile(fileName: String): Either[Validation, String] =
     operate(fileName)(path => os.read(path)):
