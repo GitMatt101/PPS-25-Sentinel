@@ -41,10 +41,6 @@ object Dependencies {
      * os-lib
      */
     lazy val osLib = "com.lihaoyi" %% "os-lib" % "0.10.7"
-    /*
-     * Jimfs
-     */
-    lazy val jimfs = "com.google.jimfs" % "jimfs" % "1.3.0" % Test
   }
   import Modules.*
   lazy val reactive: Seq[ModuleID] = Seq(monix)
@@ -56,6 +52,6 @@ object Dependencies {
   lazy val testing: Seq[ModuleID] = Seq(scalaTest, mockito) map (_ % Test)
   /** Serialization dependencies
     */
-  lazy val serialization: Seq [ModuleID] = Seq(uPickle, osLib, jimfs)
+  lazy val serialization: Seq [ModuleID] = Seq(uPickle, osLib)
 }
 // format: on
