@@ -5,25 +5,15 @@ import it.unibo.sentinel.control.serialization.Codec.Validation
 import upickle.default.{ReadWriter, read, write, macroRW}
 import scala.util.Try
 import it.unibo.sentinel.core.warehouse.Warehouse
-import it.unibo.sentinel.control.serialization.schemas.WarehouseSchema
-import it.unibo.sentinel.control.serialization.converters.WarehouseConverter
-import it.unibo.sentinel.control.serialization.schemas.PositionSchema
-import it.unibo.sentinel.control.serialization.schemas.TileSchema
-import it.unibo.sentinel.control.serialization.schemas.ScenarioSchema
-import it.unibo.sentinel.control.serialization.converters.ScenarioConverter
-import it.unibo.sentinel.control.serialization.schemas.SpawnSchema
-import it.unibo.sentinel.control.serialization.schemas.MissionSchema
-import it.unibo.sentinel.control.serialization.schemas.TaskSchema
-import it.unibo.sentinel.control.serialization.schemas.ActionSchema
-import it.unibo.sentinel.core.scenario.Policies.Routing
-import it.unibo.sentinel.core.scenario.Policies.Assignment
-import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
-import it.unibo.sentinel.core.scenario.Policies.CollisionAvoidance
+import it.unibo.sentinel.control.serialization.schemas.*
+import it.unibo.sentinel.control.serialization.converters.*
+import it.unibo.sentinel.core.scenario.Policies.*
 import it.unibo.sentinel.core.scenario.Scenario
+import it.unibo.sentinel.control.serialization.converters.ScenarioConverter.given
 
 object JsonSerialization:
 
-  trait JsonCodec[Model, ModelSchema <: Schema: ReadWriter](using
+  private final class JsonCodec[Model, ModelSchema <: Schema: ReadWriter](using
       converter: Converter[Model, ModelSchema]
   ) extends Codec[Model]:
 
@@ -41,7 +31,6 @@ object JsonSerialization:
       Try(read[ModelSchema](input)).toEither.left.map: e =>
         Validation.Syntax(e.getMessage())
 
-  given Converter[Warehouse, WarehouseSchema] = WarehouseConverter
   given ReadWriter[PositionSchema] = macroRW
   given ReadWriter[TileSchema.Floor] = macroRW
   given ReadWriter[TileSchema] = macroRW
@@ -64,16 +53,11 @@ object JsonSerialization:
   given ReadWriter[CollisionAvoidance] = macroRW
   given ReadWriter[ScenarioSchema] = macroRW
 
-  given Codec[Warehouse] = new JsonCodec[Warehouse, WarehouseSchema] {}
+  given Converter[Warehouse, WarehouseSchema] = WarehouseConverter
+  given Codec[Warehouse] = new JsonCodec[Warehouse, WarehouseSchema]
 
   given (using
-      repo: Repository[String, Warehouse],
-      warehousePath: String
-  ): Converter[Scenario, ScenarioSchema] =
-    ScenarioConverter.given_Converter_Scenario_ScenarioSchema
-
-  given (using
-      repo: Repository[String, Warehouse],
+      repo: FileRepository[Warehouse],
       warehousePath: String
   ): Codec[Scenario] =
-    new JsonCodec[Scenario, ScenarioSchema] {}
+    new JsonCodec[Scenario, ScenarioSchema]

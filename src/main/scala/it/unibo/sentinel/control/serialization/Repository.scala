@@ -23,17 +23,16 @@ trait Repository[Key, M]:
   /** Persists a domain model instance to storage.
     *
     * @param model
-    *   The domain model instance to save.
-    * @param fileName
-    *   The target file name or path segment where the model data should be
-    *   written.
+    *   the domain model instance to save.
+    * @param key
+    *   the key used to save the model.
     */
-  def save(model: M, fileName: String): Either[Validation, Unit]
+  def save(model: M, key: Key): Either[Validation, Unit]
 
   /** Loads a domain model instance associated with the specified key.
     *
     * @param key
-    *   The unique identifier of the domain model to retrieve.
+    *   the unique identifier of the domain model to retrieve.
     * @return
     *   `Right(M)` containing the loaded model if found and valid, or
     *   `Left(Validation)` if the operation fails or the model is invalid.
@@ -54,7 +53,7 @@ object FileRepository:
 
 /** Repository that uses the file system to store and load data.
   */
-trait FileRepository[M: Codec] extends Repository[String, M]:
+final class FileRepository[M: Codec] extends Repository[String, M]:
 
   def save(model: M, fileName: String): Either[Validation, Unit] =
     val data = summon[Codec[M]].encode(model)

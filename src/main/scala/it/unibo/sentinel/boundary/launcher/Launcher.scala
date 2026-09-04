@@ -35,13 +35,13 @@ object Launcher:
 
   def loadScenario(): Either[Validation, Scenario] =
     import it.unibo.sentinel.control.serialization.JsonSerialization.given
-    given warehouseRepo: Repository[String, Warehouse] =
-      new FileRepository[Warehouse] {}
+
     val warehouseName: String = "warehouse.json"
-    val scenarioName: String = "scenario.json"
     given warehousePath: String = warehouseName.inRoot.toString()
-    val scenarioRepo: Repository[String, Scenario] =
-      new FileRepository[Scenario] {}
+    given warehouseRepo: FileRepository[Warehouse] = new FileRepository[Warehouse]
+
+    val scenarioName: String = "scenario.json"
+    val scenarioRepo: Repository[String, Scenario] = new FileRepository[Scenario]
     warehouseRepo.save(Dataset.warehouse, warehouseName)
     scenarioRepo.save(Dataset.scenario, scenarioName)
     scenarioRepo.load(scenarioName.inRoot.toString())
