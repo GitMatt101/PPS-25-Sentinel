@@ -17,7 +17,8 @@ extension [A](seq: Seq[A])
     seq.filter(e => seq.count(_ == e) > 1).headOption
 
 final case class ScenarioSchema(
-    warehousePath: String,
+    id: String,
+    warehouseId: String,
     spawns: Seq[SpawnSchema],
     missions: Seq[MissionSchema],
     routing: Routing,

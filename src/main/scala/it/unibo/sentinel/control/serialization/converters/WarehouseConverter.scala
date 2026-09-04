@@ -1,12 +1,14 @@
 package it.unibo.sentinel.control.serialization.converters
 
 import it.unibo.sentinel.control.serialization.Converter
-import it.unibo.sentinel.core.warehouse.Warehouse
-import it.unibo.sentinel.control.serialization.schemas.WarehouseSchema
-import it.unibo.sentinel.core.warehouse.Tile
 import it.unibo.sentinel.control.serialization.schemas.TileSchema
-import it.unibo.sentinel.core.simulation.Tick
 import it.unibo.sentinel.control.serialization.Codec.Validation
+import it.unibo.sentinel.control.serialization.schemas.WarehouseSchema
+import it.unibo.sentinel.core.warehouse.Warehouse
+import it.unibo.sentinel.core.warehouse.Tile
+import it.unibo.sentinel.core.warehouse.value
+import it.unibo.sentinel.core.warehouse.WarehouseId
+import it.unibo.sentinel.core.simulation.Tick
 
 object WarehouseConverter extends Converter[Warehouse, WarehouseSchema]:
 
@@ -24,12 +26,13 @@ object WarehouseConverter extends Converter[Warehouse, WarehouseSchema]:
       val posSchema = PositionConverter.toSchema(pos)
       val tileSchema = summon[Converter[Tile, TileSchema]].toSchema(tile)
       (posSchema, tileSchema)
-    WarehouseSchema(model.width, model.height, tilesMap)
+    WarehouseSchema(model.id.value, model.width, model.height, tilesMap)
 
   override def toDomain(
       schema: WarehouseSchema
   ): Either[Validation, Warehouse] =
-    var warehouse = Warehouse.empty(schema.width, schema.height)
+    var warehouse =
+      Warehouse.empty(WarehouseId(schema.id), schema.width, schema.height)
     for
       (posSchema, tileSchema) <- schema.tiles
       pos <- PositionConverter.toDomain(posSchema)

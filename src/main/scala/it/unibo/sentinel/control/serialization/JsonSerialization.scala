@@ -56,8 +56,5 @@ object JsonSerialization:
   given Converter[Warehouse, WarehouseSchema] = WarehouseConverter
   given Codec[Warehouse] = new JsonCodec[Warehouse, WarehouseSchema]
 
-  given (using
-      repo: FileRepository[Warehouse],
-      warehousePath: String
-  ): Codec[Scenario] =
+  given (using repo: FileRepository[Warehouse]): Codec[Scenario] =
     new JsonCodec[Scenario, ScenarioSchema]

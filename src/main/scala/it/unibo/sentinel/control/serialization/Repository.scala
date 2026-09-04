@@ -2,14 +2,6 @@ package it.unibo.sentinel.control.serialization
 
 import it.unibo.sentinel.control.serialization.Codec.Validation
 import scala.util.Try
-import scala.io.Source
-import java.io.FileNotFoundException
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.nio.file.Files
-import java.nio.charset.StandardCharsets
-import java.nio.file.StandardOpenOption
-import java.nio.file.FileAlreadyExistsException
 
 /** A repository interface for persisting and retrieving domain models.
   *
@@ -27,7 +19,7 @@ trait Repository[Key, M]:
     * @param key
     *   the key used to save the model.
     */
-  def save(model: M, key: Key): Either[Validation, Unit]
+  def save(model: M): Either[Validation, Unit]
 
   /** Loads a domain model instance associated with the specified key.
     *
@@ -41,53 +33,43 @@ trait Repository[Key, M]:
 
 object FileRepository:
 
-  /** Root directory of the file system.
-    */
-  final val root: String = sys.props("user.home")
-
   /** Standard sentinel folder in the root directory
     */
-  final val folderPath: Path = Paths.get(root, ".sentinel")
+  final val folderPath: os.Path = os.home / ".sentinel"
 
-  extension (path: String) def inRoot: Path = folderPath.resolve(path)
+  extension (path: String) def inRoot: os.Path = folderPath / path
 
 /** Repository that uses the file system to store and load data.
   */
-final class FileRepository[M: Codec] extends Repository[String, M]:
+final class FileRepository[M: Codec](idExtractor: M => String)
+    extends Repository[String, M]:
 
-  def save(model: M, fileName: String): Either[Validation, Unit] =
+  override def save(model: M): Either[Validation, Unit] =
     val data = summon[Codec[M]].encode(model)
-    writeToFile(data, fileName)
+    writeToFile(data, idExtractor(model))
 
-  def load(filePath: String): Either[Validation, M] =
-    readFromFile(filePath).flatMap:
+  override def load(fileName: String): Either[Validation, M] =
+    readFromFile(fileName).flatMap:
       summon[Codec[M]].decode(_)
 
   private def writeToFile(
       data: String,
       fileName: String
   ): Either[Validation, Unit] =
-    import it.unibo.sentinel.control.serialization.FileRepository.inRoot
-    val folder = FileRepository.folderPath
-    Try {
-      if !Files.exists(folder) then Files.createDirectories(folder)
-      Files.writeString(
-        fileName.inRoot,
-        data,
-        StandardCharsets.UTF_8,
-        StandardOpenOption.CREATE_NEW,
-        StandardOpenOption.WRITE
-      )
-      ()
-    }.toEither.left.map { case _: FileAlreadyExistsException =>
-      Validation.FileAlreadyExists(fileName.inRoot.toString)
-    }
+    operate(fileName)(path => os.write.over(path, data)):
+      Validation.FileAlreadyExists.apply
 
-  private def readFromFile(filePath: String): Either[Validation, String] =
+  private def readFromFile(fileName: String): Either[Validation, String] =
+    operate(fileName)(path => os.read(path)):
+      Validation.FileNotFound.apply
+
+  private def operate[A](fileName: String)(operation: os.Path => A)(
+      validation: String => Validation
+  ): Either[Validation, A] =
+    import it.unibo.sentinel.control.serialization.FileRepository.inRoot
+    val targetPath = fileName.inRoot
     Try {
-      val source = Source.fromFile(filePath)
-      try source.mkString
-      finally source.close()
-    }.toEither.left.map { case _: FileNotFoundException =>
-      Validation.FileNotFound(filePath)
+      operation(targetPath)
+    }.toEither.left.map { _ =>
+      validation(fileName)
     }

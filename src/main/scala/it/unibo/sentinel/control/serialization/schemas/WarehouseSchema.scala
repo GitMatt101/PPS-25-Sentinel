@@ -22,6 +22,7 @@ enum TileSchema extends Schema:
 /** Schema of a [[Warehouse]].
   */
 case class WarehouseSchema(
+    id: String,
     width: Int,
     height: Int,
     tiles: Seq[(PositionSchema, TileSchema)]

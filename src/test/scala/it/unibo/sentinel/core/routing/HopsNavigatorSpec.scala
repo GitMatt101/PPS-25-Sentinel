@@ -2,6 +2,7 @@ package it.unibo.sentinel.core.routing
 
 import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Area, Tile}
+import it.unibo.sentinel.core.warehouse.WarehouseId
 
 class HopsNavigatorSpec extends UnitTest with NavigatorBehaviours:
 
@@ -15,7 +16,7 @@ class HopsNavigatorSpec extends UnitTest with NavigatorBehaviours:
     val to = Position(2, 1)
 
     given Warehouse = Warehouse
-      .empty(3, 3)
+      .empty(WarehouseId("W"), 3, 3)
       .withArea(
         Area(Position(0, 0), Position(2, 2))
       )(Tile.Floor())

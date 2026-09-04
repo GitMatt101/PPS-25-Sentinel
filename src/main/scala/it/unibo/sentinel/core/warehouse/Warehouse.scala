@@ -48,9 +48,25 @@ case class Area(corner: Position, opposite: Position):
     y <- ys
   yield Position(x, y)
 
+opaque type WarehouseId = String
+
+object WarehouseId:
+  def apply(id: String): WarehouseId = id
+
+extension (id: WarehouseId)
+  /** @return
+    *   the identifier as a String
+    */
+  def value: String = id
+
 /** Abstracts the static structure of a warehouse, which is model as a grid.
   */
 trait Warehouse:
+  /** @return
+    *   the warehouse's identifier.
+    */
+  def id: WarehouseId
+
   /** @return
     *   the width of the warehouse.
     */
@@ -169,11 +185,12 @@ object Warehouse:
     * @return
     *   an empty warehouse sized [[width]]x[[height]].
     */
-  def empty(w: Int, h: Int): Warehouse =
+  def empty(id: WarehouseId, w: Int, h: Int): Warehouse =
     require(w > 0 && h > 0)
-    FromLayout(w, h, Map.empty)
+    FromLayout(id, w, h, Map.empty)
 
   private final case class FromLayout(
+      id: WarehouseId,
       width: Int,
       height: Int,
       layout: Map[Position, Tile]

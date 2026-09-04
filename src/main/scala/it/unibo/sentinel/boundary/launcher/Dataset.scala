@@ -1,6 +1,12 @@
 package it.unibo.sentinel.boundary.launcher
 
-import it.unibo.sentinel.core.warehouse.{Warehouse, Area, Tile, Position}
+import it.unibo.sentinel.core.warehouse.{
+  Warehouse,
+  Area,
+  Tile,
+  Position,
+  WarehouseId
+}
 import it.unibo.sentinel.core.mission.{Mission, MissionId}
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.scenario.Scenario
@@ -27,7 +33,7 @@ object Dataset:
     val area: Area =
       Area(Position(1, 1), Position(width - 2, height - 2))
     Warehouse
-      .empty(width, height)
+      .empty(WarehouseId("w01"), width, height)
       .withArea(area):
         Tile.Floor()
 

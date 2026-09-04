@@ -1,7 +1,7 @@
 package it.unibo.sentinel.control.serialization
 
 import it.unibo.sentinel.UnitTest
-import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Tile}
+import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Tile, WarehouseId}
 import it.unibo.sentinel.control.serialization.schemas.*
 import it.unibo.sentinel.control.serialization.converters.*
 import it.unibo.sentinel.core.simulation.Tick
@@ -18,10 +18,15 @@ class ConvertersSpec extends UnitTest:
 
   "A WarehouseConverter" when:
     val model: Warehouse = Warehouse
-      .empty(3, 3)
+      .empty(WarehouseId("W"), 3, 3)
       .withTile(Position(1, 1))(Tile.Floor(Tick.unit))
     val schema: WarehouseSchema =
-      WarehouseSchema(3, 3, Seq(PositionSchema(1, 1) -> TileSchema.Floor(1)))
+      WarehouseSchema(
+        "W",
+        3,
+        3,
+        Seq(PositionSchema(1, 1) -> TileSchema.Floor(1))
+      )
     behave like basicConverter(
       model = model,
       schema = schema,

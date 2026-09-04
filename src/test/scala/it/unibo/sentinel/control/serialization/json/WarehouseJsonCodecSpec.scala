@@ -1,7 +1,13 @@
 package it.unibo.sentinel.control.serialization.json
 
 import it.unibo.sentinel.UnitTest
-import it.unibo.sentinel.core.warehouse.{Warehouse, Position, Tile, Area}
+import it.unibo.sentinel.core.warehouse.{
+  Warehouse,
+  Position,
+  Tile,
+  Area,
+  WarehouseId
+}
 import it.unibo.sentinel.core.simulation.Tick
 import it.unibo.sentinel.control.serialization.Codec.Validation
 import it.unibo.sentinel.control.serialization.Codec
@@ -9,13 +15,14 @@ import it.unibo.sentinel.control.serialization.JsonSerialization.given
 
 class WarehouseJsonCodecSpec extends UnitTest:
 
-  private val correctWarehouse: Warehouse = Warehouse
-    .empty(4, 4)
+  val id: WarehouseId = WarehouseId("w01")
+  val correctWarehouse: Warehouse = Warehouse
+    .empty(id, 4, 4)
     .withArea(Area(Position(1, 1), Position(2, 2))):
       Tile.Floor(Tick.unit)
 
   val codec = summon[Codec[Warehouse]]
-  private val validJsonInput: String = codec.encode(correctWarehouse)
+  val validJsonInput: String = codec.encode(correctWarehouse)
 
   "The WarehouseJsonCodec" should:
 
@@ -40,7 +47,8 @@ class WarehouseJsonCodecSpec extends UnitTest:
 
     "return WarehouseValidation(InvalidSize) when dimensions are non-positive" in:
       val invalidDimJson =
-        """{
+        s"""{
+          |  "id": "$id",
           |  "width": 0,
           |  "height": -2,
           |  "tiles": []
@@ -54,11 +62,12 @@ class WarehouseJsonCodecSpec extends UnitTest:
 
     "return WarehouseValidation(TilesOutOfBounds) when a tile position is out of grid bounds" in:
       val outOfBoundsJson =
-        """{
+        s"""{
+          |  "id": "$id",
           |  "width": 1,
           |  "height": 1,
           |  "tiles": [
-          |    [{"x": 5, "y": 5}, {"$type": "Floor", "cost": 1}]
+          |    [{"x": 5, "y": 5}, {"$$type": "Floor", "cost": 1}]
           |  ]
           |}""".stripMargin
       val result = codec.decode(outOfBoundsJson)
@@ -72,6 +81,7 @@ class WarehouseJsonCodecSpec extends UnitTest:
       val cost: Int = -5
       val negativeCostJson =
         s"""{
+          |  "id": "$id",
           |  "width": 4,
           |  "height": 4,
           |  "tiles": [
