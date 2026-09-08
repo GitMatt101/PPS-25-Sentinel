@@ -11,6 +11,7 @@ import it.unibo.sentinel.core.mission.{
 }
 import it.unibo.sentinel.core.routing.Path
 import it.unibo.sentinel.core.robot.RobotStatus
+import it.unibo.sentinel.core.collisions.Action as CollisionAction
 
 /** Provides query operations to inspect the state of the simulation.
   */
@@ -119,7 +120,27 @@ private[core] final class Environment private[core] (
       robot.follow(path)
       Event.RobotRouted(rid, path.positions)
 
-  /** @param rid
+  /** @param action
+    *   action to execute
+    * @return
+    *   an [[Event]] if the action produces one
+    */
+  def execute(action: CollisionAction): Option[Event] =
+    for
+      spot <- fleet.get(action.id)
+      robot = spot.robot
+      event <- action match
+        case CollisionAction.Block(id) if robot.status == RobotStatus.Moving =>
+          robot.pause()
+          Some(Event.RobotBlocked(id, spot.at))
+        case CollisionAction.Unblock(id)
+            if robot.status == RobotStatus.Waiting =>
+          robot.resume()
+          Some(Event.RobotUnblocked(id))
+        case _ => None
+    yield event
+
+  /** @param r_id
     * @return
     *   an [[Event]] if the [[Robot]] was able to move, None otherwise
     */
@@ -129,25 +150,11 @@ private[core] final class Environment private[core] (
       robot = spot.robot
       from = spot.at
       intent = spot.intent
-      if robot.remaining == Tick.zero
+      if robot.status == RobotStatus.Moving && robot.remaining == Tick.zero
     yield
-      if canMove(spot) then
-        robot.step()
-        fleet += (rid -> spot.copy(at = intent.position))
-        Event.RobotMoved(rid, from, intent.position)
-      else
-        spot.robot.pause()
-        Event.RobotBlocked(rid, from)
-
-  private def canMove(placement: Placement): Boolean =
-    placement.robot.status == RobotStatus.Moving
-      && placement.robot.remaining == Tick.zero
-      && fleet.values.forall { other =>
-        val targetPositionOccupied = other.at == placement.intent.position
-        lazy val targetWillNotBeVacated =
-          other.intent.position == placement.at || !canMove(other)
-        !(targetPositionOccupied && targetWillNotBeVacated)
-      }
+      robot.step()
+      fleet += (rid -> spot.copy(at = intent.to))
+      Event.RobotMoved(rid, from, intent.to)
 
   /** @param rid
     * @return
