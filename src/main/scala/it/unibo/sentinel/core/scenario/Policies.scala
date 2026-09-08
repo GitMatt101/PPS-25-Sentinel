@@ -5,6 +5,7 @@ import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.core.assignment.Selector
 import it.unibo.sentinel.core.collisions.SelectionPolicy
 import it.unibo.sentinel.core.collisions.CollisionHandler
+import it.unibo.sentinel.core.mission.Mission
 
 /** Represents the policies that govern the behavior of the simulation.
   */
@@ -43,9 +44,14 @@ object Policies:
   enum CollisionSelection:
 
     case Random
+    case Deadline
+    case Priority
 
-    def apply(selections: Int = 1): SelectionPolicy = this match
-      case Random => SelectionPolicy.random(selections)
+    def apply()(using missionSupplier: => Seq[Mission]): SelectionPolicy =
+      this match
+        case Random   => SelectionPolicy.random()
+        case Deadline => SelectionPolicy.closestDeadline()
+        case Priority => SelectionPolicy.highestPriority()
 
   enum CollisionAvoidance:
 

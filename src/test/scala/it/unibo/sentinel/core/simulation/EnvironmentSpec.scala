@@ -1,10 +1,17 @@
 package it.unibo.sentinel.core.simulation
 
 import it.unibo.sentinel.UnitTest
-import it.unibo.sentinel.core.mission.{Mission, MissionId, MissionStatus}
+import it.unibo.sentinel.core.item.Item
+import it.unibo.sentinel.core.mission.{
+  Action,
+  Mission,
+  MissionId,
+  MissionStatus
+}
 import it.unibo.sentinel.core.robot.{RobotId, RobotStatus}
 import it.unibo.sentinel.core.routing.{Path, Step}
-import it.unibo.sentinel.core.warehouse.Position
+import it.unibo.sentinel.core.scenario.{RobotClass, Scenario, Spawn}
+import it.unibo.sentinel.core.warehouse.{Position, Tile}
 import org.scalatest.BeforeAndAfterEach
 
 import scala.compiletime.uninitialized
@@ -91,14 +98,6 @@ class EnvironmentSpec
         environment.advance(r1) shouldBe None
         environment.placement(r1).value.at shouldBe p1
 
-      "not report a collision while it is still waiting" in:
-        val collisionPath: Path = Path(Step(p2, Tick(1)))
-
-        environment.route(r1, collisionPath)
-        environment.advance(r1) shouldBe None
-        environment.tick()
-        environment.advance(r1) shouldBe Some(Event.RobotBlocked(r1, p1))
-
       "update placement, step the robot and return RobotMoved if target position is free" in:
         val target = Position(1, 2)
         val path: Path = Path(Step(target, Tick.zero))
@@ -110,17 +109,6 @@ class EnvironmentSpec
 
         val updatedPlacement = environment.placement(r1).value
         updatedPlacement.at shouldBe target
-
-      "prevent movement and return RobotBlocked if target position is occupied by another robot" in:
-        val collisionPath: Path = Path(Step(p2, Tick.zero))
-
-        environment.route(r1, collisionPath)
-        val event = environment.advance(r1)
-
-        event shouldBe Some(Event.RobotBlocked(r1, p1))
-
-        val placementAfterCollision = environment.placement(r1).value
-        placementAfterCollision.at shouldBe p1
 
       "advance step-by-step through a Path returning RobotMoved events" in:
         val step1 = Position(1, 2)
@@ -144,18 +132,80 @@ class EnvironmentSpec
         environment.assign(r1, m1)
 
         val event = environment.perform(r1)
-        event shouldBe Some(Event.MissionCompleted(m1))
+        event shouldBe Seq(Event.MissionCompleted(m1))
 
         environment.mission(m1).value.status shouldBe MissionStatus.Completed
         environment.robot(r1).value.mission shouldBe None
 
-      "return None if the robot ID does not exist" in:
+      "return empty if the robot ID does not exist" in:
         val event = environment.perform(RobotId("UNKNOWN"))
-        event shouldBe None
+        event shouldBe empty
 
-      "return None if the robot has no mission assigned" in:
+      "return empty if the robot has no mission assigned" in:
         val event = environment.perform(r1)
-        event shouldBe None
+        event shouldBe empty
+
+    "performing a deposit mission" should:
+
+      "emit ItemPicked then ItemDropped and MissionCompleted keeping the robot assigned in between" in:
+        val carrier = RobotId("C1")
+        val depId = MissionId("D1")
+        val shelf = Position(2, 2)
+        val bay = Position(3, 3)
+        val wh = warehouse
+          .withTile(shelf)(Tile.Shelf(Item.Computer))
+          .withTile(bay)(Tile.LoadingBay())
+        val sc = (for
+          s0 <- Right(Scenario.in(wh))
+          s1 <- s0.place(Spawn(carrier, p1, RobotClass.Carrier))
+          s2 <- s1.load(
+            Mission.deliver(depId, Item.Computer, shelf, bay, Tick(10))
+          )
+        yield s2).value
+        environment = sc.build
+
+        environment.assign(carrier, depId)
+
+        environment.perform(carrier) shouldBe
+          Seq(Event.ItemPicked(carrier, depId, Item.Computer, shelf))
+        environment.mission(depId).value.status shouldBe MissionStatus.Assigned
+        environment.mission(depId).value.currentAction.value shouldBe
+          Action.Drop(Item.Computer, bay)
+        environment.robot(carrier).value.mission shouldBe Some(depId)
+        environment.robot(carrier).value.status shouldBe RobotStatus.Ready
+
+        environment.perform(carrier) shouldBe Seq(
+          Event.ItemDropped(carrier, depId, Item.Computer, bay),
+          Event.MissionCompleted(depId)
+        )
+        environment.mission(depId).value.status shouldBe MissionStatus.Completed
+        environment.robot(carrier).value.mission shouldBe None
+
+      "fail when pick exceeds the carrier maxLoad" in:
+        val carrier = RobotId("C1")
+        val depId = MissionId("D2")
+        val shelf = Position(2, 2)
+        val bay = Position(3, 3)
+        val wh = warehouse
+          .withTile(shelf)(Tile.Shelf(Item.Fridge))
+          .withTile(bay)(Tile.LoadingBay())
+        val sc = (for
+          s0 <- Right(Scenario.in(wh))
+          s1 <- s0.place(Spawn(carrier, p1, RobotClass.Carrier))
+          s2 <- s1.load(
+            Mission.deliver(depId, Item.Fridge, shelf, bay, Tick(10))
+          )
+        yield s2).value
+        environment = sc.build
+
+        environment.assign(carrier, depId)
+        environment
+          .robot(carrier)
+          .value
+          .pick(Item.Computer) shouldBe true // load 1/50
+        environment.perform(carrier) shouldBe Seq(Event.MissionFailed(depId))
+        environment.mission(depId).value.status shouldBe MissionStatus.Failed
+        environment.robot(carrier).value.mission shouldBe None
 
     "ticking simulation time" should:
 

@@ -3,6 +3,7 @@ package it.unibo.sentinel.core.mission
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.warehouse.Position
 import it.unibo.sentinel.core.simulation.Tick
+import it.unibo.sentinel.core.item.Item
 
 /** Domain context entity representing a mission within the Sentinel system.
   *
@@ -16,15 +17,20 @@ import it.unibo.sentinel.core.simulation.Tick
   *   The current lifecycle state of the mission.
   * @param carrier
   *   The robot currently assigned to carry out the mission, if any.
+  * @param priority
+  *   The priority level of the mission, where higher values indicate higher
+  *   priority.
   */
 final case class Mission private (
     id: MissionId,
     task: Task,
     deadline: Tick,
     status: MissionStatus,
-    carrier: Option[RobotId]
+    carrier: Option[RobotId],
+    priority: Priority
 ):
   import MissionStatus.*
+  export task.{isMovementOnly, requiresCarrying}
 
   private def unlessOver(f: => Mission): Mission =
     if isOver then this else f
@@ -121,6 +127,21 @@ final case class Mission private (
 
 object Mission:
 
+  /** Errors generated when creating a mission.
+    */
+  enum Validation:
+    /** The mission has a negative duration.
+      */
+    case NegativeDuration(id: MissionId, duration: Int)
+
+    /** The mission has a priority outside the valid range.
+      */
+    case InvalidPriority(id: MissionId, priority: Int)
+
+    /** The mission is already completed when created.
+      */
+    case AlreadyCompleted(id: MissionId)
+
   /** @param id
     *   The unique identifier for the mission.
     * @param task
@@ -128,20 +149,25 @@ object Mission:
     * @param duration
     *   The total time window allocated for the mission, expressed in [[Tick]]
     *   units.
+    * @param priority
+    *   The priority level of the mission, where higher values indicate higher
+    *   priority. Defaults to [[Priority.normal]].
     * @return
     *   A new [[Mission]] initialized in the unassigned
     *   [[MissionStatus.Pending]] state.
     */
-  private def apply(
+  def apply(
       id: MissionId,
       task: Task,
-      deadline: Tick
+      deadline: Tick,
+      priority: Priority = Priority.normal
   ): Mission = new Mission(
     id,
     task,
     deadline,
     MissionStatus.Pending,
-    None
+    None,
+    priority
   )
 
   /** @param id
@@ -151,9 +177,42 @@ object Mission:
     * @param duration
     *   The total time window allocated for the relocation, expressed in
     *   [[Tick]] units.
+    * @param priority
+    *   The priority level of the mission, where higher values indicate higher
+    *   priority.
     * @return
-    *   A new relocation [[Mission]] initialized in the unassigned
-    *   [[MissionStatus.Pending]] state.
+    *   A new relocation [[Mission]].
     */
-  def relocate(id: MissionId, destination: Position, duration: Tick): Mission =
-    Mission(id, Task.move(destination), duration)
+  def relocate(
+      id: MissionId,
+      destination: Position,
+      duration: Tick,
+      priority: Priority = Priority.normal
+  ): Mission =
+    Mission(id, Task.move(destination), duration, priority)
+
+  /** @param id
+    *   the unique identifier for the mission.
+    * @param item
+    *   the [[Item]] to transport.
+    * @param from
+    *   shelf [[Position]] to pick the item from.
+    * @param to
+    *   loading bay [[Position]] to drop the item onto.
+    * @param duration
+    *   time window in [[Tick]] units.
+    * @param priority
+    *   The priority level of the mission, where higher values indicate higher
+    *   priority.
+    * @return
+    *   a new pick-and-drop [[Mission]].
+    */
+  def deliver(
+      id: MissionId,
+      item: Item,
+      from: Position,
+      to: Position,
+      duration: Tick,
+      priority: Priority = Priority.normal
+  ): Mission =
+    Mission(id, Task.pickAndDrop(item, from, to), duration, priority)

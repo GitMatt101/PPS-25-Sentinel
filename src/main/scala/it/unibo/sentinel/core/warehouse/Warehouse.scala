@@ -48,9 +48,30 @@ case class Area(corner: Position, opposite: Position):
     y <- ys
   yield Position(x, y)
 
+opaque type WarehouseId = String
+
+object WarehouseId:
+  /** @param id
+    *   raw string identifier.
+    * @return
+    *   a [[WarehouseId]] wrapping `id`.
+    */
+  def apply(id: String): WarehouseId = id
+
+extension (id: WarehouseId)
+  /** @return
+    *   the identifier as a String
+    */
+  def value: String = id
+
 /** Abstracts the static structure of a warehouse, which is model as a grid.
   */
 trait Warehouse:
+  /** @return
+    *   the warehouse's identifier.
+    */
+  def id: WarehouseId
+
   /** @return
     *   the width of the warehouse.
     */
@@ -80,8 +101,38 @@ trait Warehouse:
     */
   def isTraversable(position: Position): Boolean =
     tileAt(position) match
-      case Some(Tile.Floor(_)) => true
+      case Some(_: Tile.Walkable) => true
+      case _                      => false
+
+  /** @param position
+    *   the position to check.
+    * @return
+    *   whether the tile at `position` is interactable.
+    */
+  def isInteractable(position: Position): Boolean =
+    tileAt(position) match
+      case Some(_: Tile.Interactable) => true
+      case _                          => false
+
+  /** @param position
+    *   the position to check.
+    * @return
+    *   whether the tile at `position` is a [[Tile.Shelf]].
+    */
+  def isShelf(position: Position): Boolean =
+    tileAt(position) match
+      case Some(Tile.Shelf(_)) => true
       case _                   => false
+
+  /** @param position
+    *   the position to check.
+    * @return
+    *   whether the tile at `position` is a [[Tile.LoadingBay]].
+    */
+  def isLoadingBay(position: Position): Boolean =
+    tileAt(position) match
+      case Some(Tile.LoadingBay(_)) => true
+      case _                        => false
 
   /** @param position
     *   the position of the tile to retrieve.
@@ -98,8 +149,24 @@ trait Warehouse:
     */
   def traversalCost(position: Position): Option[Tick] =
     tileAt(position) match
-      case Some(Tile.Floor(cost)) => Some(cost)
-      case _                      => None
+      case Some(tile: Tile.Walkable) => Some(tile.cost)
+      case _                         => None
+
+  /** @param position
+    *   the position of the interactable tile.
+    * @return
+    *   traversable, in-bounds positions from which `position` can be interacted
+    *   with.
+    */
+  def interactionPoints(position: Position): Seq[Position] =
+    tileAt(position) match
+      case Some(tile: Tile.Interactable) =>
+        tile.interactiveOffset
+          .map(offset => position + offset)
+          .filter(interactionPoint =>
+            isTraversable(interactionPoint) && inBound(interactionPoint)
+          )
+      case _ => Seq.empty
 
   /** @param position
     *   the position of the tile to add.
@@ -129,6 +196,12 @@ trait Warehouse:
     */
   def withoutTile(position: Position): Warehouse
 
+  /** @return
+    *   a [[Seq]] of tuples of [[Position]] and [[Tile]], representing the map
+    *   of tiles as a list.
+    */
+  def tiles: Seq[(Position, Tile)]
+
   /** @param position
     *   the position whose neighbors are to be retrieved.
     * @return
@@ -138,12 +211,29 @@ trait Warehouse:
   def neighbors(position: Position)(using strategy: Adjacency): Seq[Position] =
     strategy.around(position).filter(inBound)
 
+  /** @param position
+    *   the position whose traversable neighbours are to be retrieved.
+    * @return
+    *   in-bounds, traversable neighbours of `position`.
+    */
   def traversableNeighbors(position: Position)(using
       strategy: Adjacency
   ): Seq[Position] =
     neighbors(position).filter(isTraversable)
 
 object Warehouse:
+
+  /** Validation error generated when creating a warehouse.
+    */
+  enum Validation:
+    /** The warehouse's size is invalid (`<= 0`).
+      */
+    case InvalidSize(width: Int, height: Int)
+
+    /** Some tiles are out of bounds.
+      */
+    case TilesOutOfBounds(positions: Seq[Position], width: Int, height: Int)
+
   /** @param width
     *   the width of the warehouse.
     * @param height
@@ -151,11 +241,12 @@ object Warehouse:
     * @return
     *   an empty warehouse sized [[width]]x[[height]].
     */
-  def empty(w: Int, h: Int): Warehouse =
+  def empty(id: WarehouseId, w: Int, h: Int): Warehouse =
     require(w > 0 && h > 0)
-    FromLayout(w, h, Map.empty)
+    FromLayout(id, w, h, Map.empty)
 
   private final case class FromLayout(
+      id: WarehouseId,
       width: Int,
       height: Int,
       layout: Map[Position, Tile]
@@ -171,3 +262,5 @@ object Warehouse:
 
     override def withoutTile(position: Position): Warehouse =
       copy(layout = layout - position)
+
+    override def tiles: Seq[(Position, Tile)] = layout.toSeq
