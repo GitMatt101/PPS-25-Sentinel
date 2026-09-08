@@ -4,6 +4,7 @@ import it.unibo.sentinel.control.serialization.Schema
 import it.unibo.sentinel.control.serialization.Codec.Validation
 import it.unibo.sentinel.core.mission.Mission
 import it.unibo.sentinel.core.mission.MissionId
+import it.unibo.sentinel.core.mission.Priority
 
 enum ActionSchema extends Schema:
 
@@ -39,8 +40,12 @@ enum TaskSchema extends Schema:
     case Single(action) => action.validated.map(_ => this)
     case Done           => Right(this)
 
-final case class MissionSchema(id: String, task: TaskSchema, duration: Int)
-    extends Schema:
+final case class MissionSchema(
+    id: String,
+    task: TaskSchema,
+    duration: Int,
+    priority: Int = Priority.normal.value
+) extends Schema:
 
   override def validated: Either[Validation, Schema] =
     for
@@ -50,5 +55,11 @@ final case class MissionSchema(id: String, task: TaskSchema, duration: Int)
         (),
         Validation.MissionValidation:
           Mission.Validation.NegativeDuration(MissionId(id), duration)
+      )
+      _ <- Either.cond(
+        Priority.from(priority).isDefined,
+        (),
+        Validation.MissionValidation:
+          Mission.Validation.InvalidPriority(MissionId(id), priority)
       )
     yield this

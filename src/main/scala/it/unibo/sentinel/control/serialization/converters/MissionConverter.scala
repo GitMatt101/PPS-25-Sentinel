@@ -2,7 +2,13 @@ package it.unibo.sentinel.control.serialization.converters
 
 import it.unibo.sentinel.control.serialization.Converter
 import it.unibo.sentinel.control.serialization.schemas.MissionSchema
-import it.unibo.sentinel.core.mission.{Mission, MissionId, Action, Task}
+import it.unibo.sentinel.core.mission.{
+  Mission,
+  MissionId,
+  Action,
+  Task,
+  Priority
+}
 import it.unibo.sentinel.control.serialization.schemas.TaskSchema
 import it.unibo.sentinel.control.serialization.schemas.ActionSchema
 import it.unibo.sentinel.core.simulation.Tick
@@ -70,12 +76,23 @@ object MissionConverter extends Converter[Mission, MissionSchema]:
     MissionSchema(
       model.id.value,
       taskConverter.toSchema(model.task),
-      model.deadline.value
+      model.deadline.value,
+      model.priority.value
     )
 
   override def toDomain(schema: MissionSchema): Either[Validation, Mission] =
     for
       domainTask <- taskConverter.toDomain(schema.task)
+      priority <- Priority
+        .from(schema.priority)
+        .toRight(
+          Validation.MissionValidation(
+            Mission.Validation.InvalidPriority(
+              MissionId(schema.id),
+              schema.priority
+            )
+          )
+        )
       mission <- domainTask match
         case Task.Done =>
           Left(
@@ -84,5 +101,12 @@ object MissionConverter extends Converter[Mission, MissionSchema]:
             )
           )
         case validTask =>
-          Right(Mission(MissionId(schema.id), validTask, Tick(schema.duration)))
+          Right(
+            Mission(
+              MissionId(schema.id),
+              validTask,
+              Tick(schema.duration),
+              priority
+            )
+          )
     yield mission

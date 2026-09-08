@@ -17,13 +17,17 @@ import it.unibo.sentinel.core.item.Item
   *   The current lifecycle state of the mission.
   * @param carrier
   *   The robot currently assigned to carry out the mission, if any.
+  * @param priority
+  *   The priority level of the mission, where higher values indicate higher
+  *   priority.
   */
 final case class Mission private (
     id: MissionId,
     task: Task,
     deadline: Tick,
     status: MissionStatus,
-    carrier: Option[RobotId]
+    carrier: Option[RobotId],
+    priority: Priority
 ):
   import MissionStatus.*
   export task.{isMovementOnly, requiresCarrying}
@@ -130,6 +134,10 @@ object Mission:
       */
     case NegativeDuration(id: MissionId, duration: Int)
 
+    /** The mission has a priority outside the valid range.
+      */
+    case InvalidPriority(id: MissionId, priority: Int)
+
     /** The mission is already completed when created.
       */
     case AlreadyCompleted(id: MissionId)
@@ -141,6 +149,9 @@ object Mission:
     * @param duration
     *   The total time window allocated for the mission, expressed in [[Tick]]
     *   units.
+    * @param priority
+    *   The priority level of the mission, where higher values indicate higher
+    *   priority. Defaults to [[Priority.normal]].
     * @return
     *   A new [[Mission]] initialized in the unassigned
     *   [[MissionStatus.Pending]] state.
@@ -148,13 +159,15 @@ object Mission:
   def apply(
       id: MissionId,
       task: Task,
-      deadline: Tick
+      deadline: Tick,
+      priority: Priority = Priority.normal
   ): Mission = new Mission(
     id,
     task,
     deadline,
     MissionStatus.Pending,
-    None
+    None,
+    priority
   )
 
   /** @param id
@@ -164,11 +177,19 @@ object Mission:
     * @param duration
     *   The total time window allocated for the relocation, expressed in
     *   [[Tick]] units.
+    * @param priority
+    *   The priority level of the mission, where higher values indicate higher
+    *   priority.
     * @return
     *   A new relocation [[Mission]].
     */
-  def relocate(id: MissionId, destination: Position, duration: Tick): Mission =
-    Mission(id, Task.move(destination), duration)
+  def relocate(
+      id: MissionId,
+      destination: Position,
+      duration: Tick,
+      priority: Priority = Priority.normal
+  ): Mission =
+    Mission(id, Task.move(destination), duration, priority)
 
   /** @param id
     *   the unique identifier for the mission.
@@ -180,6 +201,9 @@ object Mission:
     *   loading bay [[Position]] to drop the item onto.
     * @param duration
     *   time window in [[Tick]] units.
+    * @param priority
+    *   The priority level of the mission, where higher values indicate higher
+    *   priority.
     * @return
     *   a new pick-and-drop [[Mission]].
     */
@@ -188,6 +212,7 @@ object Mission:
       item: Item,
       from: Position,
       to: Position,
-      duration: Tick
+      duration: Tick,
+      priority: Priority = Priority.normal
   ): Mission =
-    Mission(id, Task.pickAndDrop(item, from, to), duration)
+    Mission(id, Task.pickAndDrop(item, from, to), duration, priority)

@@ -41,6 +41,24 @@ class MissionSpec extends UnitTest:
       "have the initial Duration" in:
         pendingMission.deadline shouldBe duration
 
+      "have default priority normal" in:
+        pendingMission.priority shouldBe Priority.normal
+
+      "preserve an explicit priority" in:
+        Mission
+          .relocate(missionID, target, duration, Priority(7))
+          .priority shouldBe Priority(7)
+        Mission
+          .deliver(
+            missionID,
+            Item.Computer,
+            target,
+            Position(3, 3),
+            duration,
+            Priority(7)
+          )
+          .priority shouldBe Priority(7)
+
       "expose the current Action and Target" in:
         pendingMission.currentAction shouldBe Some(Action.Move(target))
         pendingMission.currentTarget shouldBe Some(target)
@@ -149,6 +167,34 @@ class MissionSpec extends UnitTest:
       "not decrease duration or change action if already Over" in:
         completedMission.tick shouldBe completedMission
         failedMission.tick shouldBe failedMission
+
+    "managing priority" should:
+
+      "preserve it across carrier and status transitions" in:
+        val prioritized =
+          Mission.relocate(missionID, target, duration, Priority(7))
+        prioritized.assignTo(robotID).priority shouldBe Priority(7)
+        prioritized.assignTo(robotID).unassign.priority shouldBe Priority(7)
+        prioritized.assignTo(robotID).complete.priority shouldBe Priority(7)
+        prioritized.assignTo(robotID).fail.priority shouldBe Priority(7)
+        prioritized.fail.priority shouldBe Priority(7)
+
+      "preserve it when advancing actions and ticking time" in:
+        val prioritized = Mission
+          .deliver(
+            missionID,
+            Item.Computer,
+            target,
+            Position(3, 3),
+            duration,
+            Priority(7)
+          )
+          .assignTo(robotID)
+        prioritized.completeCurrentAction.priority shouldBe Priority(7)
+        prioritized.tick.priority shouldBe Priority(7)
+        prioritized.completeCurrentAction.completeCurrentAction.priority shouldBe Priority(
+          7
+        )
 
     "a deliver mission" should:
       val from: Position = Position(2, 2)

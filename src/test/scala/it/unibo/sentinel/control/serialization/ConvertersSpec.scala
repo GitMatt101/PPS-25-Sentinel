@@ -2,7 +2,7 @@ package it.unibo.sentinel.control.serialization
 
 import it.unibo.sentinel.UnitTest
 import it.unibo.sentinel.core.item.Item
-import it.unibo.sentinel.core.mission.{Mission, MissionId, Task}
+import it.unibo.sentinel.core.mission.{Mission, MissionId, Priority, Task}
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.robot.value
 import it.unibo.sentinel.core.scenario.{RobotClass, Spawn}
@@ -86,11 +86,13 @@ class ConvertersSpec extends UnitTest:
 
   "A MissionConverter" when:
     behave like basicConverter(
-      model = Mission.relocate(MissionId("M1"), Position(5, 5), Tick(10)),
+      model = Mission
+        .relocate(MissionId("M1"), Position(5, 5), Tick(10), Priority(2)),
       schema = MissionSchema(
         "M1",
         TaskSchema.Single(ActionSchema.Move(PositionSchema(5, 5))),
-        10
+        10,
+        2
       ),
       converter = MissionConverter
     )
@@ -99,14 +101,16 @@ class ConvertersSpec extends UnitTest:
       val pickModel = Mission(
         MissionId("M2"),
         Task.pick(Item.Computer, Position(1, 1)),
-        Tick(5)
+        Tick(5),
+        Priority(1)
       )
       val pickSchema = MissionSchema(
         "M2",
         TaskSchema.Single(
           ActionSchema.PickUp(ItemSchema.Computer(1.0), PositionSchema(1, 1))
         ),
-        5
+        5,
+        1
       )
       MissionConverter.toSchema(pickModel).shouldBe(pickSchema)
       MissionConverter.toDomain(pickSchema).shouldBe(Right(pickModel))
@@ -130,7 +134,8 @@ class ConvertersSpec extends UnitTest:
         Item.Computer,
         Position(1, 1),
         Position(2, 2),
-        Tick(10)
+        Tick(10),
+        Priority(5)
       )
       val thenSchema = MissionSchema(
         "M4",
@@ -142,10 +147,28 @@ class ConvertersSpec extends UnitTest:
             ActionSchema.Drop(ItemSchema.Computer(1.0), PositionSchema(2, 2))
           )
         ),
-        10
+        10,
+        5
       )
       MissionConverter.toSchema(thenModel).shouldBe(thenSchema)
       MissionConverter.toDomain(thenSchema).shouldBe(Right(thenModel))
+
+    "reject out-of-range priority as InvalidPriority" in:
+      val badSchema = MissionSchema(
+        "M1",
+        TaskSchema.Single(ActionSchema.Move(PositionSchema(5, 5))),
+        10,
+        0
+      )
+      MissionConverter
+        .toDomain(badSchema)
+        .shouldBe(
+          Left(
+            Validation.MissionValidation(
+              Mission.Validation.InvalidPriority(MissionId("M1"), 0)
+            )
+          )
+        )
 
     "reject TaskSchema.Done as AlreadyCompleted" in:
       MissionConverter
