@@ -46,3 +46,15 @@ trait NavigatorBehaviours:
           Position(0, 1),
           Position(0, 2)
         )
+
+    "calculating a path with obstacles" should:
+      val warehouse = Warehouse
+        .empty(WarehouseId("W"), 5, 5)
+        .withArea(Area(Position(1, 1), Position(3, 3)))(Tile.Floor())
+      val navigator = build(warehouse)
+
+      "not cross any of the obstacles" in:
+        navigator
+          .path(Position(2, 1), Position(2, 3), Set(Position(2, 2)))
+          .value
+          .positions shouldNot contain(Position(2, 2))

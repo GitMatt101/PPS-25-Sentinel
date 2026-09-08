@@ -39,6 +39,18 @@ trait Navigator:
     *   the starting [[Position]].
     * @param to
     *   the destination [[Position]].
+    * @param obstacles
+    *   the obstacles.
+    * @return
+    *   An [[Option]] containing a [[Path]] between `from` and `to` (accounting
+    *   for custom obstacles) if a path exists in the given [[Warehouse]].
+    */
+  def path(from: Position, to: Position, avoiding: Set[Position]): Option[Path]
+
+  /** @param from
+    *   the starting [[Position]].
+    * @param to
+    *   the destination [[Position]].
     * @return
     *   The distance between `from` and `to` if a [[Path]] exists in the given
     *   [[Warehouse]].
@@ -97,3 +109,12 @@ object Navigator:
                 go(previous, Step(pos, cost) +: acc)
               case _ => None
         go(to, Seq.empty).map(steps => Path(steps*))
+
+      override def path(
+          from: Position,
+          to: Position,
+          avoiding: Set[Position]
+      ): Option[Path] =
+        val warehouseWithObstacles = avoiding.foldLeft(warehouse):
+          (current, obstacle) => current.withoutTile(obstacle)
+        Navigator(metric)(using warehouseWithObstacles).path(from, to)
