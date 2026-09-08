@@ -3,6 +3,7 @@ package it.unibo.sentinel.core.mission
 import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.warehouse.Position
 import it.unibo.sentinel.core.simulation.Tick
+import it.unibo.sentinel.core.item.Item
 
 /** Domain context entity representing a mission within the Sentinel system.
   *
@@ -25,6 +26,7 @@ final case class Mission private (
     carrier: Option[RobotId]
 ):
   import MissionStatus.*
+  export task.{isMovementOnly, requiresCarrying}
 
   private def unlessOver(f: => Mission): Mission =
     if isOver then this else f
@@ -163,8 +165,29 @@ object Mission:
     *   The total time window allocated for the relocation, expressed in
     *   [[Tick]] units.
     * @return
-    *   A new relocation [[Mission]] initialized in the unassigned
-    *   [[MissionStatus.Pending]] state.
+    *   A new relocation [[Mission]].
     */
   def relocate(id: MissionId, destination: Position, duration: Tick): Mission =
     Mission(id, Task.move(destination), duration)
+
+  /** @param id
+    *   the unique identifier for the mission.
+    * @param item
+    *   the [[Item]] to transport.
+    * @param from
+    *   shelf [[Position]] to pick the item from.
+    * @param to
+    *   loading bay [[Position]] to drop the item onto.
+    * @param duration
+    *   time window in [[Tick]] units.
+    * @return
+    *   a new pick-and-drop [[Mission]].
+    */
+  def deliver(
+      id: MissionId,
+      item: Item,
+      from: Position,
+      to: Position,
+      duration: Tick
+  ): Mission =
+    Mission(id, Task.pickAndDrop(item, from, to), duration)
