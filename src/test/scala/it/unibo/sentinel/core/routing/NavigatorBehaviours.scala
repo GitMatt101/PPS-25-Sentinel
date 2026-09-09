@@ -72,7 +72,11 @@ trait NavigatorBehaviours:
 
       "return no path when the destination is avoided" in:
         navigator
-          .path(Position(2, 1), Position(2, 3), Set(Position(2, 3))) shouldBe None
+          .path(
+            Position(2, 1),
+            Position(2, 3),
+            Set(Position(2, 3))
+          ) shouldBe None
 
       "reach an allowed destination without crossing avoided positions" in:
         val avoiding = Set(Position(1, 2), Position(2, 2))
