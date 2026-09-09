@@ -12,6 +12,8 @@ import it.unibo.sentinel.core.warehouse.{
   Warehouse,
   WarehouseId
 }
+import org.mockito.ArgumentMatchers.*
+import org.mockito.Mockito.*
 
 class RerouteCollisionHandlerSpec
     extends UnitTest
@@ -30,21 +32,24 @@ class RerouteCollisionHandlerSpec
 
     "a new alternative path exists" should:
 
-      given navigator: Navigator = new Navigator:
-        override given warehouse: Warehouse = dummyWarehouse
-        override def path(
-            from: Position,
-            destinations: Set[Position],
-            avoiding: Set[Position]
-        ): Option[Path] =
-          Some(alternativePath)
-        override def path(
-            from: Position,
-            to: Position,
-            avoiding: Set[Position]
-        ): Option[Path] =
-          Some(alternativePath)
+      val mockNavigator = mock(classOf[Navigator])
+      when(mockNavigator.warehouse).thenReturn(dummyWarehouse)
+      when(
+        mockNavigator.path(
+          any[Position],
+          any[Set[Position]],
+          any[Set[Position]]
+        )
+      ).thenReturn(Some(alternativePath))
+      when(
+        mockNavigator.path(
+          any[Position],
+          any[Position],
+          any[Set[Position]]
+        )
+      ).thenReturn(Some(alternativePath))
 
+      given Navigator = mockNavigator
       val rerouting: CollisionHandler = CollisionHandler.reroute()
 
       correctCollisionResolver(rerouting)
@@ -70,21 +75,25 @@ class RerouteCollisionHandlerSpec
         )
 
     "no alternative path exists" should:
-      given navigator: Navigator = new Navigator:
-        override given warehouse: Warehouse = dummyWarehouse
-        override def path(
-            from: Position,
-            destinations: Set[Position],
-            avoiding: Set[Position]
-        ): Option[Path] =
-          None
-        override def path(
-            from: Position,
-            to: Position,
-            avoiding: Set[Position]
-        ): Option[Path] =
-          None
 
+      val mockNavigator = mock(classOf[Navigator])
+      when(mockNavigator.warehouse).thenReturn(dummyWarehouse)
+      when(
+        mockNavigator.path(
+          any[Position],
+          any[Set[Position]],
+          any[Set[Position]]
+        )
+      ).thenReturn(None)
+      when(
+        mockNavigator.path(
+          any[Position],
+          any[Position],
+          any[Set[Position]]
+        )
+      ).thenReturn(None)
+
+      given Navigator = mockNavigator
       val fallbackRerouting: CollisionHandler = CollisionHandler.reroute()
 
       "fallback to Action.Wait for the yielding robot in indirect collisions" in:
