@@ -17,13 +17,51 @@ trait Navigator:
   /** @param from
     *   the starting [[Position]].
     * @param destinations
-    *   a [[Seq]] of possible destionations.
+    *   possible destinations.
+    * @param avoiding
+    *   [[Position]]s excluded for this search.
     * @return
     *   An [[Option]] containing a [[Path]] between `from` and the closest
     *   destination in `destinations`, if a path exists in the given
     *   [[Warehouse]].
     */
-  def path(from: Position, destinations: Set[Position]): Option[Path]
+  def path(
+      from: Position,
+      destinations: Set[Position],
+      avoiding: Set[Position]
+  ): Option[Path]
+
+  /** @param from
+    *   the starting [[Position]].
+    * @param destinations
+    *   possible destinations.
+    * @return
+    *   An [[Option]] containing a [[Path]] between `from` and the closest
+    *   destination in `destinations`, if a path exists in the given
+    *   [[Warehouse]].
+    */
+  def path(
+      from: Position,
+      destinations: Set[Position]
+  ): Option[Path] =
+    path(from, destinations, Set.empty)
+
+    /** @param from
+      *   the starting [[Position]].
+      * @param to
+      *   the destination [[Position]].
+      * @param avoiding
+      *   [[Position]]s excluded for this search.
+      * @return
+      *   An [[Option]] containing a [[Path]] between `from` and `to` if a path
+      *   exists in the given [[Warehouse]].
+      */
+  def path(
+      from: Position,
+      to: Position,
+      avoiding: Set[Position]
+  ): Option[Path] =
+    path(from, Set(to), avoiding)
 
   /** @param from
     *   the starting [[Position]].
@@ -33,19 +71,11 @@ trait Navigator:
     *   An [[Option]] containing a [[Path]] between `from` and `to` if a path
     *   exists in the given [[Warehouse]].
     */
-  def path(from: Position, to: Position): Option[Path] = path(from, Set(to))
-
-  /** @param from
-    *   the starting [[Position]].
-    * @param to
-    *   the destination [[Position]].
-    * @param obstacles
-    *   the obstacles.
-    * @return
-    *   An [[Option]] containing a [[Path]] between `from` and `to` (accounting
-    *   for custom obstacles) if a path exists in the given [[Warehouse]].
-    */
-  def path(from: Position, to: Position, avoiding: Set[Position]): Option[Path]
+  def path(
+      from: Position,
+      to: Position
+  ): Option[Path] =
+    path(from, to, Set.empty)
 
   /** @param from
     *   the starting [[Position]].
@@ -71,7 +101,8 @@ object Navigator:
       given warehouse: Warehouse = w
       override def path(
           from: Position,
-          destinations: Set[Position]
+          destinations: Set[Position],
+          avoiding: Set[Position]
       ): Option[Path] =
         @tailrec
         def loop(
@@ -80,14 +111,16 @@ object Navigator:
             parent: Map[Position, Position]
         ): Option[Path] =
           fringe.minByOption((_, d) => d) match
-            case None                                       => None
-            case Some((to, _)) if destinations.contains(to) =>
+            case None => None
+            case Some((to, _))
+                if destinations.contains(to) && !avoiding.contains(to) =>
               fromParent(parent)(from, to)
             case Some((curr, d)) =>
               val seen = visited + curr
               val relaxed = warehouse
                 .traversableNeighbors(curr)
                 .filterNot(seen)
+                .filterNot(avoiding)
                 .flatMap(next => metric.cost(next).map(c => next -> (d + c)))
                 .filterNot((next, c) => fringe.get(next).exists(_ <= c))
               loop(
@@ -109,12 +142,3 @@ object Navigator:
                 go(previous, Step(pos, cost) +: acc)
               case _ => None
         go(to, Seq.empty).map(steps => Path(steps*))
-
-      override def path(
-          from: Position,
-          to: Position,
-          avoiding: Set[Position]
-      ): Option[Path] =
-        val warehouseWithObstacles = avoiding.foldLeft(warehouse):
-          (current, obstacle) => current.withoutTile(obstacle)
-        Navigator(metric)(using warehouseWithObstacles).path(from, to)

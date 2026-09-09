@@ -34,7 +34,8 @@ class RerouteCollisionHandlerSpec
         override given warehouse: Warehouse = dummyWarehouse
         override def path(
             from: Position,
-            destinations: Set[Position]
+            destinations: Set[Position],
+            avoiding: Set[Position]
         ): Option[Path] =
           Some(alternativePath)
         override def path(
@@ -69,12 +70,12 @@ class RerouteCollisionHandlerSpec
         )
 
     "no alternative path exists" should:
-
       given navigator: Navigator = new Navigator:
         override given warehouse: Warehouse = dummyWarehouse
         override def path(
             from: Position,
-            destinations: Set[Position]
+            destinations: Set[Position],
+            avoiding: Set[Position]
         ): Option[Path] =
           None
         override def path(
