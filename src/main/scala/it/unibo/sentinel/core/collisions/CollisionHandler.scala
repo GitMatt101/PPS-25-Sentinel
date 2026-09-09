@@ -2,31 +2,55 @@ package it.unibo.sentinel.core.collisions
 
 import it.unibo.sentinel.core.scenario.Placement
 import it.unibo.sentinel.core.robot.RobotId
-import it.unibo.sentinel.core.robot.value
-import scala.annotation.tailrec
 import it.unibo.sentinel.core.routing.Path
 import it.unibo.sentinel.core.routing.Navigator
 
+/** Represents an action that a [[Robot]] must to perform.
+  */
 enum Action:
+  /** The [[Robot]] must move.
+    */
   case Move
+
+  /** The [[Robot]] must wait.
+    */
   case Wait
+
+  /** The [[Robot]] must follow a new [[Path]].
+    *
+    * @param path
+    *   new [[Path]] to follow.
+    */
   case Reroute(path: Path)
 
 /** Defines how to handle collisions between [[Robot]]s
   */
 trait CollisionHandler:
 
+  /** @param placements
+    *   the placements that may collide.
+    * @param selector
+    *   [[SelectionPolicy]] to determine who wins and who loses on the
+    *   conflicts.
+    * @return
+    *   a `Map` of [[RobotId]] and [[Action]] to indicate which [[Robot]] has to
+    *   do what.
+    */
   def resolveCollisions(placements: Seq[Placement])(using
       selector: SelectionPolicy
   ): Map[RobotId, Action]
 
 object CollisionHandler:
 
+  /** [[CollisionHandler]] that makes the losers of the collisions disputes wait
+    * for the cell to become unoccupied.
+    */
   def pause(): CollisionHandler =
     new Resolver(_ => Action.Wait)
 
-  /** Yielding robots avoid the disputed cell when routing the current action.
-    * If no alternative exists, they wait with their original route intact.
+  /** [[CollisionHandler]] that makes the losers of the collisions disputes
+    * choose another path towards their goal. If no path exists, they wait for
+    * the cell to become unoccupied.
     */
   def reroute()(using navigator: Navigator): CollisionHandler =
     new Resolver(placement =>
@@ -39,60 +63,7 @@ object CollisionHandler:
           avoiding = Set(placement.intent.to)
         )
       yield path
-      alternative.fold[Action](Action.Wait)(Action.Reroute.apply)
+      alternative match
+        case Some(p) => Action.Reroute(p)
+        case None    => Action.Wait
     )
-
-  private final class Resolver(onYield: Placement => Action)
-      extends CollisionHandler:
-
-    override def resolveCollisions(
-        placements: Seq[Placement]
-    )(using selector: SelectionPolicy): Map[RobotId, Action] =
-      val ordered = placements.sortBy(_.robot.id.value)
-      val movers = ordered.filter(p => p.intent.from != p.intent.to)
-      val occupants = ordered.map(p => p.intent.from -> p.intent.robotId).toMap
-      val stationary = ordered
-        .filter(p => p.intent.from == p.intent.to)
-        .map(_.intent.from)
-        .toSet
-      val cellLosers = movers
-        .groupBy(_.intent.to)
-        .toSeq
-        .sortBy((position, _) => (position.x, position.y))
-        .flatMap { (target, candidates) =>
-          val chosen =
-            if stationary.contains(target) then None
-            else selector.select(candidates.map(_.robot))
-          candidates.filterNot(p => chosen.contains(p.robot.id)).map(_.robot.id)
-        }
-        .toSet
-      val contenders = movers.filterNot(p => cellLosers.contains(p.robot.id))
-      val byOrigin = contenders.map(p => p.intent.from -> p).toMap
-      val swapLosers = (for
-        first <- contenders
-        second <- byOrigin.get(first.intent.to).toSeq
-        if second.intent.to == first.intent.from && first.robot.id.value < second.robot.id.value
-        pair = Seq(first, second)
-        chosen = selector.select(pair.map(_.robot))
-        loser <- pair.filterNot(p => chosen.contains(p.robot.id))
-      yield loser.robot.id).toSet
-      val yielding = cellLosers ++ swapLosers
-
-      @tailrec
-      def movable(candidates: Set[RobotId]): Set[RobotId] =
-        val remaining = movers
-          .filter { placement =>
-            candidates.contains(placement.robot.id) &&
-            occupants.get(placement.intent.to).forall(candidates.contains)
-          }
-          .map(_.robot.id)
-          .toSet
-        if remaining == candidates then remaining else movable(remaining)
-      val moving = movable(movers.map(_.robot.id).toSet -- yielding)
-      movers.map { placement =>
-        val decision =
-          if yielding.contains(placement.robot.id) then onYield(placement)
-          else if moving.contains(placement.robot.id) then Action.Move
-          else Action.Wait
-        placement.robot.id -> decision
-      }.toMap
