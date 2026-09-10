@@ -16,6 +16,7 @@ import it.unibo.sentinel.core.collisions.SelectionPolicy
 import it.unibo.sentinel.core.collisions.CollisionHandler
 import it.unibo.sentinel.core.routing.Path
 import it.unibo.sentinel.core.routing.Step
+import scala.util.Random
 import it.unibo.sentinel.core.scenario.Placement
 import it.unibo.sentinel.core.collisions.Action
 
@@ -26,8 +27,11 @@ class PhaseSpec
 
   given Warehouse = warehouse
   given navigator: Navigator = scenario.routing()
-  given selector: Selector = scenario.assignment()
-  given SelectionPolicy = scenario.collisionSelection()(using scenario.missions)
+  given selector: Selector = scenario.assignment(new Random(scenario.seed))
+  given SelectionPolicy =
+    scenario.collisionSelection(new Random(scenario.seed))(using
+      scenario.missions
+    )
   given CollisionHandler = scenario.collisionAvoidance()
 
   /*
@@ -300,5 +304,6 @@ class PhaseSpec
       s2 <- s1.load(Mission.deliver(depId, Item.Computer, shelf, bay, deadline))
     yield s2).value
     val depNav = depScenario.routing()(using wh)
-    val depSel = depScenario.assignment()(using depNav)
+    val depSel =
+      depScenario.assignment(new Random(depScenario.seed))(using depNav)
     (depScenario.build, wh, depNav, depSel)
