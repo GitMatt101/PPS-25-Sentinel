@@ -1,11 +1,19 @@
 package it.unibo.sentinel.core.collisions
 
 import it.unibo.sentinel.UnitTest
+import it.unibo.sentinel.core.item.Item
+import it.unibo.sentinel.core.mission.{Mission, MissionId, Priority}
 import it.unibo.sentinel.core.robot.{RobotId, value}
 import it.unibo.sentinel.core.routing.{Navigator, Path, Step}
 import it.unibo.sentinel.core.scenario.Intent
 import it.unibo.sentinel.core.simulation.Tick
-import it.unibo.sentinel.core.warehouse.*
+import it.unibo.sentinel.core.warehouse.{
+  Area,
+  Position,
+  Tile,
+  Warehouse,
+  WarehouseId
+}
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.*
 
@@ -43,7 +51,7 @@ class RerouteCollisionHandlerSpec
   ): Intent =
     Intent(id, from, to, Some(createMission(id.value, to)))
 
-  private def deliverIntent(
+  private def deliverPickIntent(
       id: RobotId,
       from: Position,
       pick: Position,
@@ -51,7 +59,23 @@ class RerouteCollisionHandlerSpec
   ): Intent =
     Intent(id, from, pick, Some(createDeliverMission(id.value, pick, drop)))
 
-  "A collision handler that uses reroute" when:
+  private def deliverDropIntent(
+      id: RobotId,
+      currentPos: Position,
+      nextPos: Position,
+      dropPos: Position
+  ): Intent =
+    val mission = Mission.deliver(
+      MissionId(s"m-drop-${id.value}"),
+      Item.Computer,
+      currentPos,
+      dropPos,
+      Tick(10),
+      Priority.normal
+    )
+    Intent(id, currentPos, nextPos, Some(mission))
+
+  "A CollisionHandler.reroute" when:
 
     "a new alternative path exists" should:
 
@@ -75,17 +99,26 @@ class RerouteCollisionHandlerSpec
           r2 -> Action.Reroute(alternativePath)
         )
 
-      "reroute yielding robot carrying a deliver mission (pick-and-drop) during indirect collision" in:
+      "reroute yielding robot during pickup phase in indirect collision" in:
         val dropPos = Position(3, 3)
-        val i1 = deliverIntent(r1, p0, pTarget, dropPos)
-        val i2 = deliverIntent(r2, Position(0, 1), pTarget, dropPos)
+        val i1 = deliverPickIntent(r1, p0, pTarget, dropPos)
+        val i2 = deliverPickIntent(r2, Position(0, 1), pTarget, dropPos)
         val actions = rerouting.resolveCollisions(Seq(i1, i2))
         actions(r1) shouldBe Action.Move
         actions(r2) shouldBe Action.Reroute(alternativePath)
 
-      "reroute yielding robot carrying a deliver mission during direct swap collision" in:
-        val i1 = deliverIntent(r1, p0, p1, Position(5, 5))
-        val i2 = deliverIntent(r2, p1, p0, Position(6, 6))
+      "reroute yielding robot during drop phase in indirect collision" in:
+        val dropPos = Position(3, 3)
+        val i1 = deliverDropIntent(r1, p0, pTarget, dropPos)
+        val i2 = deliverDropIntent(r2, Position(0, 1), pTarget, dropPos)
+        val actions = rerouting.resolveCollisions(Seq(i1, i2))
+        actions(r1) shouldBe Action.Move
+        actions(r2) shouldBe Action.Reroute(alternativePath)
+
+      "reroute yielding robot carrying a deliver mission during direct swap collision (drop phase)" in:
+        val dropPos = Position(5, 5)
+        val i1 = deliverDropIntent(r1, p0, p1, dropPos)
+        val i2 = deliverDropIntent(r2, p1, p0, dropPos)
         val actions = rerouting.resolveCollisions(Seq(i1, i2))
         actions shouldBe Map(
           r1 -> Action.Wait,
@@ -107,12 +140,15 @@ class RerouteCollisionHandlerSpec
       "fallback to Action.Wait for both robots in direct swap collisions when no path exists" in:
         val i1 = relocateIntent(r1, p0, p1)
         val i2 = relocateIntent(r2, p1, p0)
+
         val actions = fallbackRerouting.resolveCollisions(Seq(i1, i2))
         actions shouldBe Map(r1 -> Action.Wait, r2 -> Action.Wait)
 
-      "fallback to Action.Wait for deliver missions when no alternative path exists" in:
-        val i1 = deliverIntent(r1, p0, pTarget, Position(4, 4))
-        val i2 = deliverIntent(r2, Position(0, 1), pTarget, Position(5, 5))
+      "fallback to Action.Wait for deliver missions (drop phase) when no alternative path exists" in:
+        val dropPos = Position(4, 4)
+        val i1 = deliverDropIntent(r1, p0, pTarget, dropPos)
+        val i2 = deliverDropIntent(r2, Position(0, 1), pTarget, dropPos)
+
         val actions = fallbackRerouting.resolveCollisions(Seq(i1, i2))
         actions(r1) shouldBe Action.Move
         actions(r2) shouldBe Action.Wait
