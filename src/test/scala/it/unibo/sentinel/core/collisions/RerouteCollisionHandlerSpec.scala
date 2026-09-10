@@ -1,17 +1,11 @@
 package it.unibo.sentinel.core.collisions
 
 import it.unibo.sentinel.UnitTest
-import it.unibo.sentinel.core.robot.RobotId
+import it.unibo.sentinel.core.robot.{RobotId, value}
 import it.unibo.sentinel.core.routing.{Navigator, Path, Step}
 import it.unibo.sentinel.core.scenario.Intent
 import it.unibo.sentinel.core.simulation.Tick
-import it.unibo.sentinel.core.warehouse.{
-  Area,
-  Position,
-  Tile,
-  Warehouse,
-  WarehouseId
-}
+import it.unibo.sentinel.core.warehouse.*
 import org.mockito.ArgumentMatchers.*
 import org.mockito.Mockito.*
 
@@ -19,133 +13,106 @@ class RerouteCollisionHandlerSpec
     extends UnitTest
     with CollisionHandlerBehavior:
 
+  private val r1 = RobotId("R1")
+  private val r2 = RobotId("R2")
+  private val p0 = Position(0, 0)
+  private val p1 = Position(1, 0)
+  private val pTarget = Position(1, 1)
   private val alternativePath = Path(
     Step(Position(0, 1), Tick.unit),
-    Step(Position(1, 1), Tick.unit)
+    Step(pTarget, Tick.unit)
   )
 
   private given dummyWarehouse: Warehouse = Warehouse
     .empty(WarehouseId("dummy"), 10, 10)
-    .withArea(Area(Position(0, 0), Position(9, 9)))(Tile.Floor(Tick.unit))
+    .withArea(Area(p0, Position(9, 9)))(Tile.Floor(Tick.unit))
 
-  "A CollisionHandler.reroute" when:
+  private def mockNavigator(pathResult: Option[Path]): Navigator =
+    val nav = mock(classOf[Navigator])
+    when(nav.warehouse).thenReturn(dummyWarehouse)
+    when(nav.path(any[Position], any[Set[Position]], any[Set[Position]]))
+      .thenReturn(pathResult)
+    when(nav.path(any[Position], any[Position], any[Set[Position]]))
+      .thenReturn(pathResult)
+    nav
+
+  private def relocateIntent(
+      id: RobotId,
+      from: Position,
+      to: Position
+  ): Intent =
+    Intent(id, from, to, Some(createMission(id.value, to)))
+
+  private def deliverIntent(
+      id: RobotId,
+      from: Position,
+      pick: Position,
+      drop: Position
+  ): Intent =
+    Intent(id, from, pick, Some(createDeliverMission(id.value, pick, drop)))
+
+  "A collision handler that uses reroute" when:
 
     "a new alternative path exists" should:
 
-      val mockNavigator = mock(classOf[Navigator])
-      when(mockNavigator.warehouse).thenReturn(dummyWarehouse)
-      when(
-        mockNavigator.path(
-          any[Position],
-          any[Set[Position]],
-          any[Set[Position]]
-        )
-      ).thenReturn(Some(alternativePath))
-      when(
-        mockNavigator.path(
-          any[Position],
-          any[Position],
-          any[Set[Position]]
-        )
-      ).thenReturn(Some(alternativePath))
-
-      given Navigator = mockNavigator
-      val rerouting: CollisionHandler = CollisionHandler.reroute()
-
+      given Navigator = mockNavigator(Some(alternativePath))
+      val rerouting = CollisionHandler.reroute()
       correctCollisionResolver(rerouting)
 
       "return Action.Reroute with the new path for the yielding robot in indirect collisions" in:
-        val r1Id = RobotId("R1")
-        val r2Id = RobotId("R2")
-        val target = Position(1, 1)
-
-        val i1 = Intent(
-          r1Id,
-          Position(0, 0),
-          target,
-          Some(createMission("R1", target))
-        )
-        val i2 = Intent(
-          r2Id,
-          Position(0, 1),
-          target,
-          Some(createMission("R2", target))
-        )
-
+        val i1 = relocateIntent(r1, p0, pTarget)
+        val i2 = relocateIntent(r2, Position(0, 1), pTarget)
         val actions = rerouting.resolveCollisions(Seq(i1, i2))
-        actions(r1Id) shouldBe Action.Move
-        actions(r2Id) shouldBe Action.Reroute(alternativePath)
+        actions(r1) shouldBe Action.Move
+        actions(r2) shouldBe Action.Reroute(alternativePath)
 
       "make the winner wait for the other robot to reroute and move in direct swap collisions" in:
-        val r4Id = RobotId("R4")
-        val r5Id = RobotId("R5")
-        val p0 = Position(0, 0)
-        val p1 = Position(1, 0)
-
-        val i4 = Intent(r4Id, p0, p1, Some(createMission("R4", p1)))
-        val i5 = Intent(r5Id, p1, p0, Some(createMission("R5", p0)))
-
-        val actions = rerouting.resolveCollisions(Seq(i4, i5))
+        val i1 = relocateIntent(r1, p0, p1)
+        val i2 = relocateIntent(r2, p1, p0)
+        val actions = rerouting.resolveCollisions(Seq(i1, i2))
         actions shouldBe Map(
-          r4Id -> Action.Wait,
-          r5Id -> Action.Reroute(alternativePath)
+          r1 -> Action.Wait,
+          r2 -> Action.Reroute(alternativePath)
+        )
+
+      "reroute yielding robot carrying a deliver mission (pick-and-drop) during indirect collision" in:
+        val dropPos = Position(3, 3)
+        val i1 = deliverIntent(r1, p0, pTarget, dropPos)
+        val i2 = deliverIntent(r2, Position(0, 1), pTarget, dropPos)
+        val actions = rerouting.resolveCollisions(Seq(i1, i2))
+        actions(r1) shouldBe Action.Move
+        actions(r2) shouldBe Action.Reroute(alternativePath)
+
+      "reroute yielding robot carrying a deliver mission during direct swap collision" in:
+        val i1 = deliverIntent(r1, p0, p1, Position(5, 5))
+        val i2 = deliverIntent(r2, p1, p0, Position(6, 6))
+        val actions = rerouting.resolveCollisions(Seq(i1, i2))
+        actions shouldBe Map(
+          r1 -> Action.Wait,
+          r2 -> Action.Reroute(alternativePath)
         )
 
     "no alternative path exists" should:
 
-      val mockNavigator = mock(classOf[Navigator])
-      when(mockNavigator.warehouse).thenReturn(dummyWarehouse)
-      when(
-        mockNavigator.path(
-          any[Position],
-          any[Set[Position]],
-          any[Set[Position]]
-        )
-      ).thenReturn(None)
-      when(
-        mockNavigator.path(
-          any[Position],
-          any[Position],
-          any[Set[Position]]
-        )
-      ).thenReturn(None)
-
-      given Navigator = mockNavigator
-      val fallbackRerouting: CollisionHandler = CollisionHandler.reroute()
+      given Navigator = mockNavigator(None)
+      val fallbackRerouting = CollisionHandler.reroute()
 
       "fallback to Action.Wait for the yielding robot in indirect collisions" in:
-        val r1Id = RobotId("R1")
-        val r2Id = RobotId("R2")
-        val target = Position(1, 1)
-
-        val i1 = Intent(
-          r1Id,
-          Position(0, 0),
-          target,
-          Some(createMission("R1", target))
-        )
-        val i2 = Intent(
-          r2Id,
-          Position(0, 1),
-          target,
-          Some(createMission("R2", target))
-        )
-
+        val i1 = relocateIntent(r1, p0, pTarget)
+        val i2 = relocateIntent(r2, Position(0, 1), pTarget)
         val actions = fallbackRerouting.resolveCollisions(Seq(i1, i2))
-        actions(r1Id) shouldBe Action.Move
-        actions(r2Id) shouldBe Action.Wait
+        actions(r1) shouldBe Action.Move
+        actions(r2) shouldBe Action.Wait
 
       "fallback to Action.Wait for both robots in direct swap collisions when no path exists" in:
-        val r4Id = RobotId("R4")
-        val r5Id = RobotId("R5")
-        val p0 = Position(0, 0)
-        val p1 = Position(1, 0)
+        val i1 = relocateIntent(r1, p0, p1)
+        val i2 = relocateIntent(r2, p1, p0)
+        val actions = fallbackRerouting.resolveCollisions(Seq(i1, i2))
+        actions shouldBe Map(r1 -> Action.Wait, r2 -> Action.Wait)
 
-        val i4 = Intent(r4Id, p0, p1, Some(createMission("R4", p1)))
-        val i5 = Intent(r5Id, p1, p0, Some(createMission("R5", p0)))
-
-        val actions = fallbackRerouting.resolveCollisions(Seq(i4, i5))
-        actions shouldBe Map(
-          r4Id -> Action.Wait,
-          r5Id -> Action.Wait
-        )
+      "fallback to Action.Wait for deliver missions when no alternative path exists" in:
+        val i1 = deliverIntent(r1, p0, pTarget, Position(4, 4))
+        val i2 = deliverIntent(r2, Position(0, 1), pTarget, Position(5, 5))
+        val actions = fallbackRerouting.resolveCollisions(Seq(i1, i2))
+        actions(r1) shouldBe Action.Move
+        actions(r2) shouldBe Action.Wait
