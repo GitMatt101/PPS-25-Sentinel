@@ -1,9 +1,8 @@
 package it.unibo.sentinel.core.collisions
 
 import it.unibo.sentinel.UnitTest
-import it.unibo.sentinel.core.robot.Robot
 import it.unibo.sentinel.core.robot.RobotId
-import it.unibo.sentinel.core.scenario.Placement
+import it.unibo.sentinel.core.scenario.Intent
 import it.unibo.sentinel.core.warehouse.Position
 
 class PauseCollisionHandlerSpec extends UnitTest with CollisionHandlerBehavior:
@@ -17,53 +16,102 @@ class PauseCollisionHandlerSpec extends UnitTest with CollisionHandlerBehavior:
     "resolving indirect collisions" should:
 
       "make the yielding loser wait" in:
-        val r1 = createMovingRobot("R1", Position(1, 1))
-        val r2 = createMovingRobot("R2", Position(1, 1))
-        val p1 = Placement(r1, Position(0, 0))
-        val p2 = Placement(r2, Position(0, 1))
-        val actions = pausing.resolveCollisions(Seq(p1, p2))
+        val r1Id = RobotId("R1")
+        val r2Id = RobotId("R2")
+        val target = Position(1, 1)
+
+        val i1 = Intent(
+          r1Id,
+          Position(0, 0),
+          target,
+          Some(createMission("R1", target))
+        )
+        val i2 = Intent(
+          r2Id,
+          Position(0, 1),
+          target,
+          Some(createMission("R2", target))
+        )
+
+        val actions = pausing.resolveCollisions(Seq(i1, i2))
         actions shouldBe Map(
-          r1.id -> Action.Move,
-          r2.id -> Action.Wait
+          r1Id -> Action.Move,
+          r2Id -> Action.Wait
         )
 
       "make all contenders wait if a stationary robot occupies the target cell" in:
-        val r1 = createMovingRobot("R1", Position(1, 1))
-        val r2 = createMovingRobot("R2", Position(1, 1))
-        val r3Stationary = Robot.drone(RobotId("R3"))
-        val p1 = Placement(r1, Position(0, 0))
-        val p2 = Placement(r2, Position(0, 1))
-        val p3Stationary = Placement(r3Stationary, Position(1, 1))
-        val actions = pausing.resolveCollisions(Seq(p1, p2, p3Stationary))
-        actions(r1.id) shouldBe Action.Wait
-        actions(r2.id) shouldBe Action.Wait
+        val r1Id = RobotId("R1")
+        val r2Id = RobotId("R2")
+        val r3Id = RobotId("R3")
+        val target = Position(1, 1)
+
+        val i1 = Intent(
+          r1Id,
+          Position(0, 0),
+          target,
+          Some(createMission("R1", target))
+        )
+        val i2 = Intent(
+          r2Id,
+          Position(0, 1),
+          target,
+          Some(createMission("R2", target))
+        )
+        val i3Stationary = Intent(r3Id, target, target, None)
+
+        val actions = pausing.resolveCollisions(Seq(i1, i2, i3Stationary))
+        actions(r1Id) shouldBe Action.Wait
+        actions(r2Id) shouldBe Action.Wait
 
     "resolving direct collisions" should:
 
       "make both robots wait" in:
-        val r4 = createMovingRobot("R4", Position(1, 0))
-        val r5 = createMovingRobot("R5", Position(0, 0))
-        val p4 = Placement(r4, Position(0, 0))
-        val p5 = Placement(r5, Position(1, 0))
-        val actions = pausing.resolveCollisions(Seq(p4, p5))
+        val r4Id = RobotId("R4")
+        val r5Id = RobotId("R5")
+        val p0 = Position(0, 0)
+        val p1 = Position(1, 0)
+
+        val i4 = Intent(r4Id, p0, p1, Some(createMission("R4", p1)))
+        val i5 = Intent(r5Id, p1, p0, Some(createMission("R5", p0)))
+
+        val actions = pausing.resolveCollisions(Seq(i4, i5))
         actions shouldBe Map(
-          r4.id -> Action.Wait,
-          r5.id -> Action.Wait
+          r4Id -> Action.Wait,
+          r5Id -> Action.Wait
         )
 
     "handling chain dependencies" should:
 
       "cascade wait decisions when a robot cannot move into an occupied cell" in:
-        val r1 = createMovingRobot("R1", Position(1, 0))
-        val r2 = createMovingRobot("R2", Position(2, 0))
-        val r3 = createMovingRobot("R3", Position(3, 0))
-        val p1 = Placement(r1, Position(0, 0))
-        val p2 = Placement(r2, Position(1, 0))
-        val p3 = Placement(r3, Position(2, 0))
-        val p4 = Placement(Robot.drone(RobotId("R4")), Position(3, 0))
-        val actions = pausing.resolveCollisions(Seq(p1, p2, p3, p4))
+        val r1Id = RobotId("R1")
+        val r2Id = RobotId("R2")
+        val r3Id = RobotId("R3")
+        val r4StatId = RobotId("R4")
+
+        val i1 = Intent(
+          r1Id,
+          Position(0, 0),
+          Position(1, 0),
+          Some(createMission("R1", Position(1, 0)))
+        )
+        val i2 = Intent(
+          r2Id,
+          Position(1, 0),
+          Position(2, 0),
+          Some(createMission("R2", Position(2, 0)))
+        )
+        val i3 = Intent(
+          r3Id,
+          Position(2, 0),
+          Position(3, 0),
+          Some(createMission("R3", Position(3, 0)))
+        )
+        val i4Stationary =
+          Intent(r4StatId, Position(3, 0), Position(3, 0), None)
+
+        val actions = pausing.resolveCollisions(Seq(i1, i2, i3, i4Stationary))
         actions shouldBe Map(
-          r1.id -> Action.Wait,
-          r2.id -> Action.Wait,
-          r3.id -> Action.Wait
+          r1Id -> Action.Wait,
+          r2Id -> Action.Wait,
+          r3Id -> Action.Wait
         )
