@@ -4,6 +4,7 @@ import it.unibo.sentinel.core.robot.RobotId
 import it.unibo.sentinel.core.routing.Path
 import it.unibo.sentinel.core.routing.Navigator
 import it.unibo.sentinel.core.scenario.Intent
+import it.unibo.sentinel.core.mission.Action as MissionAction
 
 /** Represents an action that a [[Robot]] must perform.
   */
@@ -51,31 +52,19 @@ object CollisionHandler:
     * to become unoccupied.
     */
   def reroute()(using navigator: Navigator): CollisionHandler =
-    new Resolver(intent =>
-      val alternative = for
+    Resolver { intent =>
+      val targetNodes = for
         mission <- intent.mission
         action <- mission.currentAction
-        path <- action match
-          case it.unibo.sentinel.core.mission.Action.Move(to) =>
-            navigator.path(
-              intent.from,
-              to,
-              avoiding = Set(intent.to)
-            )
-          case it.unibo.sentinel.core.mission.Action.PickUp(_, to) =>
-            navigator.path(
-              intent.from,
-              navigator.warehouse.neighbors(to).toSet,
-              avoiding = Set(intent.to)
-            )
-          case it.unibo.sentinel.core.mission.Action.Drop(_, to) =>
-            navigator.path(
-              intent.from,
-              to,
-              avoiding = Set(intent.to)
-            )
-      yield path
-      alternative match
-        case Some(p) => Action.Reroute(p)
-        case None    => Action.Wait
-    )
+      yield action match
+        case MissionAction.PickUp(_, to) =>
+          navigator.warehouse.neighbors(to).toSet
+        case MissionAction.Move(to)    => Set(to)
+        case MissionAction.Drop(_, to) => Set(to)
+      val alternativePath = targetNodes.flatMap { targets =>
+        navigator.path(intent.from, targets, avoiding = Set(intent.to))
+      }
+      alternativePath match
+        case Some(path) => Action.Reroute(path)
+        case None       => Action.Wait
+    }
