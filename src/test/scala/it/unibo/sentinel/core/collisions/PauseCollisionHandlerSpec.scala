@@ -9,11 +9,11 @@ class PauseCollisionHandlerSpec extends UnitTest with CollisionHandlerBehavior:
 
   "A CollisionHandler.pause" when:
 
-    correctCollisionResolver(pausing)
+    baseHandler(pausing)
 
     "resolving indirect collisions" should:
 
-      "make the yielding loser wait" in:
+      "make the yielding robot wait" in:
         val target = Position(1, 1)
         val i1 = moveIntent(r1, Position(0, 0), target)
         val i2 = moveIntent(r2, Position(0, 1), target)
@@ -26,8 +26,8 @@ class PauseCollisionHandlerSpec extends UnitTest with CollisionHandlerBehavior:
         val target = Position(1, 1)
         val i1 = moveIntent(r1, Position(0, 0), target)
         val i2 = moveIntent(r2, Position(0, 1), target)
-        val i3Stat = stationaryIntent(r3, target)
-        val actions = pausing.resolveCollisions(Seq(i1, i2, i3Stat))
+        val standing = stationaryIntent(r3, target)
+        val actions = pausing.resolveCollisions(Seq(i1, i2, standing))
         actions(r1) shouldBe Action.Wait
         actions(r2) shouldBe Action.Wait
 
