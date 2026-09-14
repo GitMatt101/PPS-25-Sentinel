@@ -65,20 +65,21 @@ object Engine:
     def clock: Observable[Tick]
 
     private val history: LazyList[StepResult] =
-      val initial = StepResult(simulation.snapshot, Seq.empty)
+      val initial =
+        StepResult(simulation.time, simulation.snapshot, Seq.empty)
       LazyList
         .iterate(initial)(_ => simulation.step())
         .takeWhile(_ => !simulation.isOver)
 
     override def run(onStep: StepResult => Task[Unit]): Task[Report] =
       clock
+        .observeOn(scheduler)
         .map { case Tick(time) => history.lift(time) }
         .takeWhileInclusive(_ => !simulation.isOver)
         .collect { case Some(step) => step }
         .mapEval(onStep)
         .completedL
         .map(_ => simulation.statistics)
-        .executeOn(scheduler)
 
   private trait ControllableClock(
       commands: Observable[Command],

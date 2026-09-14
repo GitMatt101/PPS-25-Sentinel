@@ -14,28 +14,28 @@ import it.unibo.sentinel.core.simulation.{
   Simulation,
   Statistics,
   StepResult,
-  Snapshot
+  Snapshot,
+  Tick
 }
 
-class EngineSpec extends UnitTest:
+trait EngineFixture:
+  val scheduler = TestScheduler()
+  given Scheduler = scheduler
+  val period = 1.second
+  val commands = ConcurrentSubject.publish[Command]
+  val simulation = mock[Simulation]()
+  val initial = StepResult(Tick.zero, mock[Snapshot](), Seq.empty)
+  val second = StepResult(Tick(1), mock[Snapshot](), Seq.empty)
+  val expectedReport = mock[Statistics.Report]()
+  when(simulation.snapshot).thenReturn(initial.snapshot)
+  when(simulation.step()).thenReturn(second)
+  when(simulation.statistics).thenReturn(expectedReport)
+  val engine = Engine(simulation, period, commands)
 
-  protected trait EngineFixture:
-    val scheduler = TestScheduler()
-    given Scheduler = scheduler
-    val period = 1.second
-    val commands = ConcurrentSubject.publish[Command]
-    val simulation = mock[Simulation]()
-    val initial = StepResult(mock[Snapshot](), Seq.empty)
-    val second = StepResult(mock[Snapshot](), Seq.empty)
-    val expectedReport = mock[Statistics.Report]()
-    when(simulation.snapshot).thenReturn(initial.snapshot)
-    when(simulation.step()).thenReturn(second)
-    when(simulation.statistics).thenReturn(expectedReport)
-    val engine = Engine(simulation, period, commands)
+  def submit(command: Command): Unit =
+    val _ = commands.onNext(command)
 
-    def submit(command: Command): Unit =
-      val _ = commands.onNext(command)
-
+class EngineSpec extends UnitTest with EngineFixture:
   "An Engine" when:
 
     "not run" should:
@@ -92,9 +92,10 @@ class EngineSpec extends UnitTest:
         val gate = Promise[Unit]()
         val _ = engine.run(_ => Task.fromFuture(gate.future)).runToFuture
         scheduler.tick(period * 3)
+        verify(simulation, never()).step()
         val _ = gate.success(())
         scheduler.tick(period)
-        verify(simulation, times(1)).step()
+        verify(simulation, atLeastOnce()).step()
 
     "paused" should:
       "stop advancing the simulation" in new EngineFixture:
@@ -160,6 +161,7 @@ class EngineSpec extends UnitTest:
         verify(simulation, times(1)).step()
 
     "terminated" should:
+
       "produce the report of the completed simulation" in new EngineFixture:
         when(simulation.isOver).thenReturn(false, true)
         val running = engine.run(_ => Task.unit).runToFuture

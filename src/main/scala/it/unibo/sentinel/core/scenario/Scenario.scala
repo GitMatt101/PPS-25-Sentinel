@@ -12,24 +12,6 @@ import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
 import scala.collection.immutable.ListMap
 import it.unibo.sentinel.core.simulation.Tick
 
-/** Represents the intention of a [[Robot]] to move to a specific [[Position]]
-  *
-  * @param robotId
-  *   the [[Robot]]'s id.
-  * @param from
-  *   the [[Robot]]'s current position.
-  * @param to
-  *   the destination.
-  * @param mission
-  *   the [[Mission]] that the [[Robot]] is executing (if it has one).
-  */
-case class Intent(
-    robotId: RobotId,
-    from: Position,
-    to: Position,
-    mission: Option[Mission]
-)
-
 /** Represents a [[Robot]] placed in a [[Position]] in the [[Warehouse]].
   *
   * @param robot
@@ -239,6 +221,22 @@ trait Scenario:
     */
   def load(mission: Mission): Either[Validation, Scenario]
 
+  /** @param rid
+    *   the [[RobotId]] of the [[Robot]] to remove.
+    * @return
+    *   a new [[Scenario]] without the given [[Robot]]'s [[Spawn]]. If no
+    *   [[Spawn]] with that id exists, the [[Scenario]] is returned unchanged.
+    */
+  def remove(rid: RobotId): Scenario
+
+  /** @param mid
+    *   the [[MissionId]] of the [[Mission]] to unload.
+    * @return
+    *   a new [[Scenario]] without the given [[Mission]]. If no [[Mission]] with
+    *   that id exists, the [[Scenario]] is returned unchanged.
+    */
+  def unload(mid: MissionId): Scenario
+
   /** Builds and initializes the simulation [[Environment]] from this
     * [[Scenario]].
     *
@@ -311,6 +309,12 @@ object Scenario:
         _ <- checkTask(mission)
       yield copy(missions = missions :+ mission)
 
+    override def remove(rid: RobotId): Scenario =
+      copy(spawns = spawns.filterNot(_.id == rid))
+
+    override def unload(mid: MissionId): Scenario =
+      copy(missions = missions.filterNot(_.id == mid))
+
     private def checkTask(mission: Mission): Either[Validation, Unit] =
       mission.task.actions
         .flatMap(checkAction)
@@ -318,6 +322,8 @@ object Scenario:
         .toLeft(())
 
     private def checkAction(action: Action): Option[Validation] = action match
+      case Action.Move(to) if !warehouse.isTraversable(to) =>
+        Some(NotFloorTile(to))
       case Action.PickUp(target, at) =>
         warehouse.tileAt(at).collect { case Tile.Shelf(stored) => stored } match
           case Some(stored) if stored == target => None
