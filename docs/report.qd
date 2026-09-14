@@ -26,29 +26,49 @@
 
 ## Descrizione requisiti
 
-**Sentinel** è un sistema di simulazione che consente di modellare e analizzare il comportamento di **magazzini** virtuali gestiti da **flotte di robot autonomi**.
-Per ciascun magazzino l'utente può configurare uno o più _scenari_ operativi, specificando i robot disponibili e l'insieme delle _missioni_ che questi devono portare a termine, oltre alle politiche gestionali che regolano l'assegnazione delle missioni ai robot, il calcolo dei loro percorsi e la risoluzione dei conflitti che possono sorgere fra loro.
-Ogni scenario può essere eseguito attraverso una o più _simulazioni_: al termine di ciascuna, il sistema produce un _report_ con le statistiche sulle prestazioni ottenute, permettendo di confrontare i risultati di configurazioni alternative dello stesso magazzino, così da individuare quella più efficace rispetto agli obiettivi prefissati.
+**Sentinel** è un sistema di simulazione che consente di modellare e analizzare il comportamento di **magazzini**
+virtuali gestiti da **flotte di robot autonomi**.
+Per ciascun magazzino l'utente può configurare uno o più _scenari_ operativi, specificando i robot disponibili e
+l'insieme delle _missioni_ che questi devono portare a termine, oltre alle politiche gestionali che regolano
+l'assegnazione delle missioni ai robot, il calcolo dei loro percorsi e la risoluzione dei conflitti che possono sorgere
+fra loro.
+Ogni scenario può essere eseguito attraverso una o più _simulazioni_: al termine di ciascuna, il sistema produce un
+_report_ con le statistiche sulle prestazioni ottenute, permettendo di confrontare i risultati di configurazioni
+alternative dello stesso magazzino, così da individuare quella più efficace rispetto agli obiettivi prefissati.
 
 Gli obiettivi principali del sistema sono i seguenti:
 - consentire la definizione di scenari di magazzino personalizzabili in termini di:
     - flotta di robot e missioni da completare;
-    - diverse politiche configurabili per l'assegnazione delle missioni, per il calcolo dei percorsi dei robot e per la gestione dei conflitti fra essi;
+    - diverse politiche configurabili per l'assegnazione delle missioni, per il calcolo dei percorsi dei robot e per la
+    gestione dei conflitti fra essi;
 - simulare l'esecuzione di uno scenario, gestendo nel tempo l'avanzamento delle missioni e degli spostamenti dei robot;
-- produrre, al termine di ogni simulazione, un report con le statistiche di prestazione, per consentire il confronto fra configurazioni differenti dello stesso scenario.
+- produrre, al termine di ogni simulazione, un report con le statistiche di prestazione, per consentire il confronto
+fra configurazioni differenti dello stesso scenario.
 
 ### Requisiti funzionali
 
-- Il sistema deve permettere di configurare un magazzino come una griglia di celle, distinguendo tra ostacoli, scaffali, celle di percorso (specificando il costo di attraversamento) e zone di carico.
-- Il sistema deve permettere di definire la flotta di robot di uno scenario, specificando per ciascuno la posizione iniziale e la capacità di carico.
-- Il sistema deve permettere di definire le missioni di uno scenario, di tipo spostamento, prelievo o deposito, ciascuna con una propria priorità e scadenza.
-- Il sistema deve assegnare le missioni ai robot secondo la politica configurata per lo scenario (vicinanza, ciclica, carico di lavoro o casuale).
-- Il sistema deve consentire di calcolare i percorsi dei robot minimizzando la metrica prescelta (tempo oppure distanza).
-- Il sistema deve risolvere i conflitti tra robot che competono per la stessa cella, secondo la politica di gestione configurata, combinando un'azione (attesa o ricalcolo) con un criterio di selezione (casuale, priorità o tempo rimanente).
-- Il sistema deve tracciare, durante la simulazione, lo stato di ciascuna missione (in attesa, assegnata, in esecuzione, completata, fallita) e di ciascun robot (in attesa, pronto, in movimento, arrivato).
-- Il sistema deve permettere di specificare un limite massimo di tempo per la simulazione, interrompendone l'esecuzione qualora tale limite venga raggiunto anche in assenza del completamento di tutte le missioni.
-- Al termine della simulazione, il sistema deve produrre un report contenente: numero di missioni completate, tempo totale, distanza totale percorsa, tempo medio e distanza media per missione, robot più utilizzato e robot meno utilizzato.
-- Il sistema deve permettere di poter salvare e caricare il magazzino e gli scenari da eseguire in file esterni, così da poterli riutilizzare in esecuzioni successive.
+- Il sistema deve permettere di configurare un magazzino come una griglia di celle, distinguendo tra ostacoli, scaffali,
+ celle di percorso (specificando il costo di attraversamento) e zone di carico.
+- Il sistema deve permettere di definire la flotta di robot di uno scenario, specificando per ciascuno la posizione
+iniziale e la capacità di carico.
+- Il sistema deve permettere di definire le missioni di uno scenario, di tipo spostamento, prelievo o deposito,
+ciascuna con una propria priorità e scadenza.
+- Il sistema deve assegnare le missioni ai robot secondo la politica configurata per lo scenario (vicinanza, ciclica,
+carico di lavoro o casuale).
+- Il sistema deve consentire di calcolare i percorsi dei robot minimizzando la metrica prescelta
+(tempo oppure distanza).
+- Il sistema deve risolvere i conflitti tra robot che competono per la stessa cella, secondo la politica di gestione
+configurata, combinando un'azione (attesa o ricalcolo) con un criterio di selezione (casuale, priorità o
+tempo rimanente).
+- Il sistema deve tracciare, durante la simulazione, lo stato di ciascuna missione (in attesa, assegnata, in esecuzione,
+ completata, fallita) e di ciascun robot (in attesa, pronto, in movimento, arrivato).
+- Il sistema deve permettere di specificare un limite massimo di tempo per la simulazione, interrompendone l'esecuzione
+qualora tale limite venga raggiunto anche in assenza del completamento di tutte le missioni.
+- Al termine della simulazione, il sistema deve produrre un report contenente: numero di missioni completate, tempo
+totale, distanza totale percorsa, tempo medio e distanza media per missione, robot più utilizzato e robot meno
+utilizzato.
+- Il sistema deve permettere di poter salvare e caricare il magazzino e gli scenari da eseguire in file esterni,
+così da poterli riutilizzare in esecuzioni successive.
 
 ### Requisiti non funzionali
 
