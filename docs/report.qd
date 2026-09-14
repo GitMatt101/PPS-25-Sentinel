@@ -178,17 +178,17 @@ stato calcolato.
 
 ## Modello del dominio
 
-Il **magazzino** virtuale è modellato come una griglia bidimensionale di _celle_, dove ogni cella rappresenta una porzione discreta di spazio.
+Il **magazzino** virtuale (Figura .ref {warehouse}) è modellato come una griglia bidimensionale di _celle_, dove ogni cella rappresenta una porzione discreta di spazio.
 Ogni cella appartiene a una delle seguenti tipologie:
 - _Pavimento_: cella libera su cui i robot possono transitare.
-- _Scaffale_: cella non attraversabile ma interagibile presso dei punti di interazione adiacenti. I robot possono quindi fermarsi presso di essa per prelevare o depositare merce.
+- _Scaffale_: cella non attraversabile ma interagibile presso dei punti di interazione adiacenti. I robot possono quindi fermarsi presso di essa per prelevare la merce.
 - _Zona di carico_: cella di percorso speciale dedicata alle operazioni di scarico merce.
 
 Ogni cella attraversabile ha un _costo_ associato, che rappresenta il tempo necessario per attraversarla.
 
-![warehouse](diagrams/warehouse.svg "Diagramma UML del magazzino")
+![warehouse](diagrams/warehouse.svg "Diagramma UML del magazzino"){#warehouse}
 
-Una **missione** rappresenta un'attività assegnabile ai robot all'interno del magazzino.
+Una **missione** (Figura .ref {mission}) rappresenta un'attività assegnabile ai robot all'interno del magazzino.
 Ogni missione è definita da:
 - _Obbiettivo_:
     - _spostamento_: il robot deve recarsi verso un punto specifico del magazzino.
@@ -202,11 +202,10 @@ Ogni missione è definita da:
     - _completata_ con successo.
     - _fallita_ perché non completata entro la scadenza.
 
-![mission](diagrams/mission.svg "Diagramma UML della missione")
+![mission](diagrams/mission.svg "Diagramma UML della missione"){#mission}
 
 Un **robot** è un agente mobile autonomo che opera all'interno del magazzino per eseguire missioni. Ogni robot è definito da:
 - _Posizione_: cella del magazzino in cui si trova attualmente.
-- _Capacità di carico_: peso massimo trasportabile, espresso in unità di peso.
 - _Stato_: un robot può trovarsi in uno dei seguenti stati:
     - _inattivo_, ovvero in attesa di una nuova missione.
     - _pronto_ ad eseguire una missione assegnata.
@@ -217,8 +216,7 @@ Un **robot** è un agente mobile autonomo che opera all'interno del magazzino pe
     - _Trasportatore leggero_: media velocità e capace di trasportare oggetti leggeri.
     - _Trasportatore pesante_: lento e capace di trasportare qualsiasi oggetto.
 
-I robot possono essere dotati di una _coda_ con la quale memorizzare nuove missioni anche mentre ne stanno eseguendo una.
-Al contrario, i robot privi di questa funzione non possono ricevere nuovi compiti finché non completano quello in corso.
+I robot sono dotati di una _coda_ con la quale memorizzare nuove missioni anche mentre ne stanno eseguendo una. I robot che hanno una coda piena non possono accettare altre missioni finché non completano quella in corso.
 
 Uno **scenario** è una configurazione operativa completa del magazzino e definisce tutti gli elementi necessari per eseguire una simulazione. Ogni scenario specifica:
 
@@ -229,39 +227,39 @@ Uno **scenario** è una configurazione operativa completa del magazzino e defini
   - assegnazione dei percorsi
   - gestione dei conflitti tra robot
 
-Tra le politiche di assegnazione delle missioni si distinguono:
+Tra le politiche di assegnazione delle missioni (Figura .ref {assignment})  si distinguono:
 - _Vicinanza_: la missione viene assegnata al robot più vicino al punto di origine della missione.
 - _Ciclica_: le missioni vengono assegnate ai robot in ordine ciclico, indipendentemente dalla loro posizione.
 - _Carico di lavoro_: le missioni vengono assegnate al robot con il minor numero di missioni in coda.
 - _Casuale_: le missioni vengono assegnate ad un robot scelto casualmente tra quelli disponibili.
 
-![assignment](diagrams/assignment.svg "Diagramma UML della componente di assegnazione delle missioni")
+![assignment](diagrams/assignment.svg "Diagramma UML della componente di assegnazione delle missioni"){#assignment}
 
-Il sistema offre diverse strategie per il calcolo del percorso ottimale, ciascuna pensata per minimizzare una specifica metrica nel tragitto tra la posizione attuale del robot e la destinazione.
+Il sistema offre diverse strategie per il calcolo del percorso ottimale (Figura .ref {routing}), ciascuna pensata per minimizzare una specifica metrica nel tragitto tra la posizione attuale del robot e la destinazione.
 
 Tra le metriche disponibili si distinguono:
 - _Distanza_: individua il percorso con il minor numero di celle da attraversare, a prescindere dai relativi costi.
 - _Tempo_: individua il percorso più rapido considerando i costi di attraversamento delle singole celle.
 - _Ostacoli_: individua il percorso che transita vicino al minor numero di ostacoli, per evitare collisioni irrisolvibili.
 
-![routing](diagrams/routing.svg "Diagramma UML della componente di routing")
+![routing](diagrams/routing.svg "Diagramma UML della componente di routing"){#routing}
 
 Infine, si distinguono le diverse politiche di gestione dei conflitti tra robot. I conflitti si verificano in due casi:
 - _collisione indiretta_: quando due o più robot vogliono muoversi nella stessa cella.
 - _collisione diretta_: quando un robot vuole muoversi nella cella occupata da un robot stazionario o quando due robot vogliono scambiarsi di posto.
 
-Ogni politica di gestione specifica come risolverli, combinando un'azione con un criterio di selezione. Dai robot coinvolti in una collisione ne viene scelto uno che potrà muoversi (se possibile), mentre gli altri dovranno eseguire un'azione sostitutiva:
+Ogni politica di gestione specifica come risolverli, combinando un'azione con un criterio di selezione. Dai robot coinvolti in una collisione ne viene scelto uno che potrà muoversi (se possibile), mentre gli altri dovranno eseguire un'azione sostitutiva (Figura .ref {action}):
 - _Attesa_: vengono bloccati finché la cella non sarà nuovamente libera.
 - _Ricalcolo del percorso_: Ricalcolano il percorso (se esiste) evitando la cella in cui si sarebbero dovuti muovere, in quanto verrà occupata da un altro robot.
 
-![action](diagrams/action.svg "Diagramma UML delle azioni")
+![action](diagrams/action.svg "Diagramma UML delle azioni"){#action}
 
-Criteri di selezione:
+Criteri di selezione (Figura .ref {collisionselection}):
 - _Casuale_: il robot che vince è scelto casualmente.
 - _Priorità_: vince il robot con la missione di priorità più alta.
 - _Tempo rimanente_: vince il robot con la missione più vicina allo scadere del tempo.
 
-![collisionselection](diagrams/collisionselection.svg "Diagramma UML dei criteri di selezione")
+![collisionselection](diagrams/collisionselection.svg "Diagramma UML dei criteri di selezione"){#collisionselection}
 
 Per **simulazione** si intende una particolare esecuzione di uno scenario.
 In genere, una simulazione termina quando tutte le missioni hanno terminato la loro esecuzione. È possibile, tuttavia, specificare il limite massimo di tempo, causando l'interruzione prematura dell'esecuzione.
@@ -274,12 +272,14 @@ A fine della simulazione il sistema produce le statistiche sulle prestazioni del
 - _Numero di missioni_
 - _Numero di missioni completate e fallite_
 - _Distanza totale percorsa_: numero di celle percorse da tutti i robot durante la simulazione.
-- _Numero di blocchi_: quante volte un robot è stato bloccato (per far passare un altro robot in una collisione o per assenza di percorso valido).
+- _Numero di blocchi_: quante volte un robot è stato bloccato.
 - _Tempo di completamento medio e massimo_: definisce la media del tempo impiegato per completare ciascuna missione e la durata della missione con il tempo di esecuzione più elevato.
-- _Robot più usato_
-- _Robot meno usato_
+- _Robot più usato_: il robot a cui sono state assegnate più missioni.
+- _Robot meno usato_: il robot a cui sono state assegnate meno missioni.
 
-![domain](diagrams/domain.svg "Diagramma UML del dominio")
+In Figura .ref {domain} viene mostrato il diagramma UML del dominio applicativo semplificato.
+
+![domain](diagrams/domain.svg "Diagramma UML del dominio"){#domain}
 
 <!-- Chapter: Design  -->
 .align {end} 
