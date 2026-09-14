@@ -173,8 +173,8 @@ stato calcolato.
 
 ### Requisiti di implementazione
 
-- Il sistema deve essere sviluppato in linguaggio Scala.
-- Il sistema deve avere una copertura di test superiore al 70% del codice sorgente.
+- **RI-01** *Linguaggio di programmazione*: il sistema deve essere sviluppato in linguaggio *Scala*.
+- **RI-02** *Copertura dei test*: il sistema deve avere una copertura di test superiore al 70% del codice sorgente.
 
 ## Modello del dominio
 
