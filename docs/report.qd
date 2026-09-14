@@ -47,6 +47,10 @@ ed eseguite e come le interazioni tra robo influenzano l'avanzamento della simul
 - **RB-03** *Valutazione dei risultati*: Il sistema deve fornire indicatori quantitativi che permettano all’utente di
 confrontare gli esiti di scenari differenti.
 
+Il risultato atteso è la possibilità di svolgere un ciclo completo di configurazione, simulazione e valutazione.
+L’individuazione della configurazione preferibile spetta all’utente, sulla base degli indicatori rilevanti per il
+proprio confronto.
+
 ### Requisiti funzionali
 
 - Il sistema deve permettere di configurare un magazzino come una griglia di celle, distinguendo tra ostacoli, scaffali,
