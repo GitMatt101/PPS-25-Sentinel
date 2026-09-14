@@ -26,24 +26,26 @@
 
 ## Descrizione requisiti
 
-**Sentinel** è un sistema di simulazione che consente di modellare e analizzare il comportamento di **magazzini**
-virtuali gestiti da **flotte di robot autonomi**.
-Per ciascun magazzino l'utente può configurare uno o più _scenari_ operativi, specificando i robot disponibili e
-l'insieme delle _missioni_ che questi devono portare a termine, oltre alle politiche gestionali che regolano
+**Sentinel** è un sistema di simulazione che consente di modellare **magazzini** virtuali gestiti da flotte di **robot**
+autonomi e di analizzarne il comportamento durante l’esecuzione di attività di spostamento e trasporto di merci.
+
+Per ciascun magazzino l'utente può configurare uno o più *scenari* operativi, specificando i robot disponibili e
+l'insieme delle *missioni* che questi devono portare a termine, oltre alle politiche gestionali che regolano
 l'assegnazione delle missioni ai robot, il calcolo dei loro percorsi e la risoluzione dei conflitti che possono sorgere
 fra loro.
-Ogni scenario può essere eseguito attraverso una o più _simulazioni_: al termine di ciascuna, il sistema produce un
-_report_ con le statistiche sulle prestazioni ottenute, permettendo di confrontare i risultati di configurazioni
-alternative dello stesso magazzino, così da individuare quella più efficace rispetto agli obiettivi prefissati.
 
-Gli obiettivi principali del sistema sono i seguenti:
-- consentire la definizione di scenari di magazzino personalizzabili in termini di:
-    - flotta di robot e missioni da completare;
-    - diverse politiche configurabili per l'assegnazione delle missioni, per il calcolo dei percorsi dei robot e per la
-    gestione dei conflitti fra essi;
-- simulare l'esecuzione di uno scenario, gestendo nel tempo l'avanzamento delle missioni e degli spostamenti dei robot;
-- produrre, al termine di ogni simulazione, un report con le statistiche di prestazione, per consentire il confronto
-fra configurazioni differenti dello stesso scenario.
+Durante la *simulazione*, l’utente può osservare l’evoluzione dello scenario e controllarne l’avanzamento.
+Al termine, un *report* descrive i risultati dell’esecuzione mediante indicatori relativi al completamento delle missioni,
+ai tempi, alle distanze percorse e all’utilizzo dei robot.
+
+### Requisiti di business
+
+- **RB-01** *Modellazione di configurazioni alternative*: il sistema deve consentire all'utente di rappresentare magazzini
+diversi e di definire, per uno stesso magazzino, scenari con flotte, missioni e politiche gestionali diverse.
+- **RB-02** *Osservazione del comportamento*: Il sistema deve consentire di esaminare come le missioni vengono assegnate
+ed eseguite e come le interazioni tra robo influenzano l'avanzamento della simulazione.
+- **RB-03** *Valutazione dei risultati*: Il sistema deve fornire indicatori quantitativi che permettano all’utente di
+confrontare gli esiti di scenari differenti.
 
 ### Requisiti funzionali
 
