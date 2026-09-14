@@ -40,7 +40,8 @@ ai tempi, alle distanze percorse e all’utilizzo dei robot.
 
 ### Requisiti di business
 
-- **RB-01** *Modellazione di configurazioni alternative*: il sistema deve consentire all'utente di rappresentare magazzini
+- **RB-01** *Modellazione di configurazioni alternative*: il sistema deve consentire all'utente di rappresentare
+magazzini
 diversi e di definire, per uno stesso magazzino, scenari con flotte, missioni e politiche gestionali diverse.
 - **RB-02** *Osservazione del comportamento*: Il sistema deve consentire di esaminare come le missioni vengono assegnate
 ed eseguite e come le interazioni tra robo influenzano l'avanzamento della simulazione.
@@ -52,6 +53,58 @@ L’individuazione della configurazione preferibile spetta all’utente, sulla b
 proprio confronto.
 
 ### Requisiti funzionali
+
+#### Utente
+
+- **RFU-01** *Creazione del magazzino*: l'utente deve poter creare un magazzino specificandone l'identificatore e
+dimensioni e configurare le celle come *pavimenti*, *scaffali* o *zone di carico*. Deve poter applicare modifiche a
+singole celle o ad aree rettangolari e rimuovere le celle selezionate. La rimozione di una cella comporta l'automatica
+invalidazione degli scenari che su tale cella avevano predisposto robot o missioni.
+
+- **RFU-02** *Costi di attraversamento*: l'utente deve poter specificare un costo temporale _non negativo_ per le celle
+su cui è possibile transitare.
+
+- **RFU-03** *Configurazione di un magazzino attraverso diversi scenari*: l'utente deve avere la possibilità di
+configurare più scenari operativi di uno stesso magazzino.
+
+- **RFU-04** *Configurazione della flotta*: l'utente deve poter aggiungere e rimuovere robot dallo scenario. Per ciascun
+robot deve poter scegliere la tipologia (*drone*, *carrier* ed *heavy carrier*) e la loro posizione iniziale.
+
+- **RFU-05** *Configurazione delle missioni*: l'utente deve poter aggiungere e rimuovere missioni di spostamento e di
+consegna. Deve poter specificare la destinazione dello spostamento oppure lo scaffale di origine e la zona di carico
+della consegna, oltre a scadenza e priorità.
+
+- **RFU-06** *Scelta delle politica di calcolo del percorso*: l'utente deve poter scegliere quale metrica minimizzare
+(distanza, tempo e numero di ostacoli) per calcolare il percorso ottimale di un robot verso la destinazione.
+
+- **RFU-07** *Scelta della politica di assegnazione delle missioni*: l'utente deve poter scegliere quale politica di
+assegnazione utilizzare nello scenario (vicinanza, ciclica, casuale e al robot con meno carico di lavoro) per gestire
+come le missioni vengono allocate ai robot.
+
+- **RFU-08** *Scelta della politica di gestione delle collisioni*: l'utente deve poter scegliere quale politica di
+gestione per le collisioni adottare, combinando un'azione (attesa, ricalcolo del percorso) con un criterio di selezione
+che decide quali robot _non_ eseguono l'azione (casuale, priorità, tempo rimanente).
+
+- **RFU-09** *Riutilizzo delle configurazioni*: l'utente deve poter salvare e riaprire magazzini e scenari dal file
+system.
+
+- **RFU-10** *Avvio della simulazione*: l'utente deve poter avviare una simulazione scegliendo quale scenario eseguire
+e impostare facoltivamente un limite massimo di tick, superato il quale la simulazione si ferma e tutte le missioni non
+completate falliscono.
+
+- **RFU-11** *Osservazione della simulazione*: l'utente deve poter consultare l'esecuzione della simulazione, osservando
+i comportamenti dei robot, quali percorsi vengono scelti, lo stato delle missioni e gli eventi accaduti al passo
+precedente.
+
+- **RFU-12** *Controllo della simulazione*: durante una simulazione, l'utente deve poter sposendere e riprendere
+l'avanzamento automatico, avanzare di un passo e consultare il passo precedente.
+
+- **RFU-13** *Consultazione dei risultati*: Alla conclusione dell'esecuzione, il sistema deve presentare il report
+contenente le statistiche e l'utente può consultarle.
+
+- **RFU-14** *Interruzione volontaria*: in qualsiasi momento l'utente deve poter ritornare al menu principale.
+
+#### Sistema
 
 - Il sistema deve permettere di configurare un magazzino come una griglia di celle, distinguendo tra ostacoli, scaffali,
  celle di percorso (specificando il costo di attraversamento) e zone di carico.
