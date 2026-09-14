@@ -89,8 +89,7 @@ che decide quali robot _non_ eseguono l'azione (casuale, priorità, tempo rimane
 system.
 
 - **RFU-10** *Avvio della simulazione*: l'utente deve poter avviare una simulazione scegliendo quale scenario eseguire
-e impostare facoltivamente un limite massimo di tick, superato il quale la simulazione si ferma e tutte le missioni non
-completate falliscono.
+e impostare facoltivamente un limite massimo di passi di esecuzione.
 
 - **RFU-11** *Osservazione della simulazione*: l'utente deve poter consultare l'esecuzione della simulazione, osservando
 i comportamenti dei robot, quali percorsi vengono scelti, lo stato delle missioni e gli eventi accaduti al passo
@@ -106,28 +105,65 @@ contenente le statistiche e l'utente può consultarle.
 
 #### Sistema
 
-- Il sistema deve permettere di configurare un magazzino come una griglia di celle, distinguendo tra ostacoli, scaffali,
- celle di percorso (specificando il costo di attraversamento) e zone di carico.
-- Il sistema deve permettere di definire la flotta di robot di uno scenario, specificando per ciascuno la posizione
-iniziale e la capacità di carico.
-- Il sistema deve permettere di definire le missioni di uno scenario, di tipo spostamento, prelievo o deposito,
-ciascuna con una propria priorità e scadenza.
-- Il sistema deve assegnare le missioni ai robot secondo la politica configurata per lo scenario (vicinanza, ciclica,
-carico di lavoro o casuale).
-- Il sistema deve consentire di calcolare i percorsi dei robot minimizzando la metrica prescelta
-(tempo oppure distanza).
-- Il sistema deve risolvere i conflitti tra robot che competono per la stessa cella, secondo la politica di gestione
-configurata, combinando un'azione (attesa o ricalcolo) con un criterio di selezione (casuale, priorità o
-tempo rimanente).
-- Il sistema deve tracciare, durante la simulazione, lo stato di ciascuna missione (in attesa, assegnata, in esecuzione,
- completata, fallita) e di ciascun robot (in attesa, pronto, in movimento, arrivato).
-- Il sistema deve permettere di specificare un limite massimo di tempo per la simulazione, interrompendone l'esecuzione
-qualora tale limite venga raggiunto anche in assenza del completamento di tutte le missioni.
-- Al termine della simulazione, il sistema deve produrre un report contenente: numero di missioni completate, tempo
-totale, distanza totale percorsa, tempo medio e distanza media per missione, robot più utilizzato e robot meno
-utilizzato.
-- Il sistema deve permettere di poter salvare e caricare il magazzino e gli scenari da eseguire in file esterni,
-così da poterli riutilizzare in esecuzioni successive.
+- **RFS-01** *Validità del posizionamento*: i robot devono essere collocati inizialmente su celle attraversabili.
+Due robot non possono condividere la posizione iniziale e i loro identificatori devono essere distinti all’interno dello
+scenario. Un inserimento non valido deve essere rifiutato senza modificare lo scenario.
+
+- **RFS-02** *Validità delle missioni*: gli identificatori delle missioni devono essere distinti all’interno dello
+scenario. La destinazione di uno spostamento deve essere attraversabile; una consegna deve riferirsi all’oggetto
+associato allo scaffale di origine e avere come destinazione una zona di carico.
+La priorità deve essere un intero compreso tra 1 e 10, con valori maggiori corrispondenti a priorità superiori.
+
+- **RFS-03** *Capacità dei robot*: i droni devono accettare esclusivamente missioni di spostamento.
+I trasportatori (carrier) devono poter accettar anche missioni di trasporto merce e consentire il prelievo di un oggetto
+solo quando il carico risultante non supera la loro capacità. Le missioni assegnate a ciascun robot devono essere
+eseguite nell'ordine della relativa coda. Le caratteristiche di ogni classe di robot sono:
+    - *Drone*: nessuna capacità di carico, 3 missioni massimo assegnabili contemporaneamente e sono veloci
+    (non devono attendere nessuna unità temporale oltre al costo della prossima cella).
+    - *Carrier*: possono caricare al massimo 50 unità di peso, possono accettare fino a 5 missioni contemporaneamente ma
+    sono più lenti dei droni (devono attendere 1 passo in più per ogni cella rispetto ad un drone).
+    - *Heavy Carrier*: possono caricare al massimo 200 unità di peso ma possono accettare solo 1 missione alla volta e
+    sono molto lenti (devono attendere 2 passi in più per ogni cella rispetto al drone)
+
+- **RFS-04** *Assegnazione delle missioni*: Il sistema deve scegliere tra i robot che possono accettare la missione
+secondo la politica configurata: vicinanza, selezione ciclica, minor carico di lavoro oppure selezione casuale.
+In assenza di un candidato, la missione deve rimanere in attesa, continuando a essere soggetta alla propria scadenza.
+Il carico di lavoro è il numero di missioni assegnate, inclusa quella corrente. Se un robot non ha abbastanza capacità
+di carico per trasportare un oggetto, allora il robot non può accettare la missione.
+
+- **RFS-05** *Calcolo dei percorsi*: I percorsi devono attraversare esclusivamente celle consentite e raggiungere la
+destinazione dell’azione corrente. Per il prelievo, la destinazione deve essere un punto di interazione dello scaffale.
+Ogni metrica permette di ottenere un percorso ottimale:
+Le metriche disponibili devono considerare rispettivamente il numero di passi (*distanza*), la somma dei costi temporali
+(*tempo*) oppure una penalizzazione della vicinanza agli ostacoli (*ostacoli*).
+
+- **RFS-06** *Gestione dei conflitti*: Il sistema deve gestire sia i tentativi di raggiungere la stessa cella sia i
+tentativi di scambio reciproco di posizione. Nei conflitti in cui è possibile scegliere una precedenza, il criterio
+deve essere casuale, basato sulla priorità più alta oppure sulla scadenza più vicina. I robot che cedono devono
+attendere o cercare un percorso alternativo, secondo la politica configurata; se il percorso alternativo non è
+disponibile, devono attendere.
+
+- **RFS-07** *Esecuzione delle missioni*: Una missione di spostamento deve completarsi quando il robot raggiunge la
+destinazione. Una consegna deve completarsi dopo il prelievo e il successivo deposito dell’oggetto.
+
+- **RFS-08** *Scadenze*:  La scadenza deve rappresentare il numero di tick rimanenti dalla creazione della missione.
+A ogni passo il sistema deve aggiornare le scadenze prima di eseguire le nuove azioni.
+Una missione il cui tempo è esaurito deve fallire.˙
+
+- **RFS-09** *Stati delle missioni*: Il sistema deve distinguere missioni in attesa di assegnazione, assegnate,
+completate e fallite. Una missione rimane assegnata fino a che non raggiunge uno stato terminale.
+Completamento e fallimento sono stati terminali.
+
+- **RFS-10** *Stati dei robot*: Il sistema deve distinguere robot inattivi, pronti a svolgere una missione, in movimento
+ e temporaneamente in attesa a causa di un conflitto.
+
+- **RFS-11** *Terminazione*: Una simulazione deve terminare quando tutte le missioni hanno raggiunto uno stato terminale
+oppure quando viene raggiunto il limite temporale impostato. Al raggiungimento del limite, le missioni ancora attive
+devono essere dichiarate fallite.
+
+- **RFS-12** *Navigazione temporale*: L’arretramento deve consentire di consultare gli stati già prodotti.
+Il successivo avanzamento deve ripresentare la storia disponibile e proseguire la simulazione quando raggiunge l’ultimo
+stato calcolato.
 
 ### Requisiti non funzionali
 
