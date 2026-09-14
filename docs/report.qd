@@ -286,8 +286,41 @@ A fine della simulazione il sistema produce le statistiche sulle prestazioni del
     # Design
 
 ## Architettura del sistema
+In .ref {architecture-diagram} è rappresentato lo schema UML dell’architettura del simulatore.
 
-![architecture](diagrams/architecture.svg "Schema UML del dominio. Sono rappresentati i concetti principali del sistema, alcune interfacce sono state omesse per astrarre da dettagli che potrebbero distrarre dalla comprensione generale del modello.")
+L'architettura di Sentinel segue il pattern _Model-View-Controller_ (MVC) e organizza il sistema in tre livelli principali: `core`, `control` e `boundary`. 
+
+Il package `core` costituisce il _model_ dell’applicazione: rappresenta magazzini, robot, missioni e scenari e
+definisce le regole della simulazione, comprese le politiche di assegnazione, calcolo dei percorsi e gestione
+dei conflitti. L’avanzamento del dominio avviene per passi discreti, indipendentemente dalla frequenza con
+cui vengono eseguiti e dalla loro rappresentazione grafica.
+
+Il package `control` comprende i _controller_, che interpretano i comandi dell’utente e coordinano le operazioni
+sul modello. Gli `Editor` gestiscono la costruzione e la modifica di `Warehouse` e `Scenario`, mentre l’`Engine`
+regola l’esecuzione temporale di `Simulation`, consentendo di sospenderla, riprenderla e consultarne i
+passi.
+
+Il package `boundary` raccoglie le componenti di interazione con l’esterno. Nell’interfaccia grafica, il ruolo
+di view è suddiviso tra `View`, responsabile della presentazione dello stato, e `Interactive`, che raccoglie i
+comandi dell’utente. Il `Toolkit` fornisce la finestra e le viste necessarie attraverso contratti indipendenti
+dallo specifico framework grafico.
+
+Per integrare le interazioni dell’utente, l’esecuzione temporizzata e gli aggiornamenti dell’interfaccia, il
+progetto sfrutta le astrazioni funzionali e reattive fornite da `Monix`. Tali astrazioni sono principalmente due:
+`Observable`, che rappresenta flussi di eventi o stati, e `Task`, che descrive operazioni differibili ed
+eseguibili in modo asincrono.
+
+Il collegamento tra le componenti è affidato ad `Application`, che compone i `Task` per coordinare il ciclo di vita
+dell’applicazione. Questa composizione permette di organizzare la navigazione tra le viste, sequenziare le
+operazioni e gestire il completamento o l’interruzione delle attività, garantendo il rilascio delle risorse.
+
+Durante la modifica di `Warehouse` o di `Scenario`, `Application` collega il flusso di comandi proveniente da `Interactive` verso `Editor`. Quest'ultimo li interpreta e restituisce un `Observable` contenente gli aggiornamenti di stato, a cui la `View` si sottoscrive per aggiornare la grafica.
+
+Durante la simulazione, `Application` inoltra invece i comandi ad `Engine`, fornendogli la funzione di rendering da invocare ogni volta che un nuovo passo di simulazione (`StepResult`) è disponibile nel flusso (`Observable[StepResult]`).
+ 
+Il `Task` di esecuzione della simulazione viene coordinato con quello dedicato all'attesa della chiusura della vista: al completamento della simulazione, il `Report` generato viene mostrato all'interno della vista delle statistiche, se invece l'utente ritorna al menu principale prima delle conclusione, il `Report` non verrà generato.
+
+![Diagramma architetturale](diagrams/architecture.svg "Schema UML dell’architettura di Sentinel. Le interfacce `Editor` ed `Engine` rappresentano i _controller_ dell'applicazione: ricevono i comandi provenienti dall’interfaccia `Interactive` e coordinano le operazioni sul modello. La View osserva i cambiamenti di stato nell'applicazione e li riflette nell’interfaccia utente. `Interactive` e `View` costituiscono quindi la _view_ del sistema, mentre `Editor` e `Engine` fungono da intermediari tra quest’ultimo e il dominio applicativo. `Application` ha il compito di coordinare l'intero processo applicativo.") {#architecture-diagram}
 
 ## Design in dettaglio
 
