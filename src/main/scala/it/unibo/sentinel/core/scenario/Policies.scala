@@ -63,6 +63,8 @@ object Policies:
       case Random        => Selector.RandomSelector(rng)
       case LeastWorkload => Selector.LeastWorkload()
 
+  /** Selection policies, i.e. how to choose which robot wins in a collision.
+    */
   enum CollisionSelection:
 
     case Random
@@ -80,6 +82,9 @@ object Policies:
         case Deadline => SelectionPolicy.closestDeadline()
         case Priority => SelectionPolicy.highestPriority()
 
+  /** Collision avoidance policies, i.e. what the yielding robots in a collsion
+    * have to do.
+    */
   enum CollisionAvoidance:
 
     case Wait
