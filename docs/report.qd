@@ -201,7 +201,6 @@ Ogni cella appartiene a una delle seguenti tipologie:
 
 Ogni cella attraversabile ha un _costo_ associato, che rappresenta il tempo necessario per attraversarla.
 
-
 Una **missione** (Figura .ref {mission}) rappresenta un'attività assegnabile ai robot all'interno del magazzino.
 Ogni missione è definita da:
 - _Obbiettivo_:
@@ -218,11 +217,9 @@ Ogni missione è definita da:
 
 ![warehouse](diagrams/warehouse.svg "Diagramma UML del magazzino"){#warehouse}
 
-
-
 ![mission](diagrams/mission.svg "Diagramma UML della missione"){#mission}
 
-Un **robot** è un agente mobile autonomo che opera all'interno del magazzino per eseguire missioni. Ogni robot è definito da:
+Un **robot** (Figura .ref {robot}) è un agente mobile autonomo che opera all'interno del magazzino per eseguire missioni. Ogni robot è definito da:
 - _Posizione_: cella del magazzino in cui si trova attualmente.
 - _Stato_: un robot può trovarsi in uno dei seguenti stati:
     - _inattivo_, ovvero in attesa di una nuova missione.
@@ -235,6 +232,8 @@ Un **robot** è un agente mobile autonomo che opera all'interno del magazzino pe
     - _Trasportatore pesante_: lento e capace di trasportare qualsiasi oggetto.
 
 I robot sono dotati di una _coda_ con la quale memorizzare nuove missioni anche mentre ne stanno eseguendo una. I robot che hanno una coda piena non possono accettare altre missioni finché non completano quella in corso.
+
+![robot](diagrams/robot.svg "Diagramma UML del robot"){#robot}
 
 Uno **scenario** è una configurazione operativa completa del magazzino e definisce tutti gli elementi necessari per eseguire una simulazione. Ogni scenario specifica:
 
@@ -432,21 +431,21 @@ In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è po
 
 ### Serializzazione
 
-#### Codifica/decodifica dei modelli di dominio
-![codec](diagrams/codec.svg "Rappresentazione UML dell'applicazione del pattern *Codec* con *Interface Segregation Principle*."){#codec}
+#### Codifica e decodifica dei modelli di dominio
+![codec](diagrams/codec.svg "Rappresentazione UML di un `Codec`."){#codec}
 
-**Problema**: Si vuole creare un modo per salvare e caricare i modelli di dominio in/da uno storage esterno.
-
-\
-**Soluzione**: È stato implementato un `Codec`, che rappresenta l'unione di un `Encoder` e di un `Decoder`. Il `Codec` è quindi in grado di codificare e decodificare i modelli di dominio tramite l'utilizzo dei `Converter`. L'implementazione (Figura .ref {codec} ) segue l'*Interface Segregation Principle* per separare le responsabilità del `Decoder` e dell'`Encoder` e il pattern *Codec*, unendo le due componenti in una sola responsabile di tutti i .
-
-#### Serializzazione dei modelli di dominio
-![codec](diagrams/converter.svg "Rappresentazione UML dell'applicazione del pattern *Data Mapper*.")
-
-**Problema**: Definire un meccanismo robusto per la serializzazione e deserializzazione delle entità appartenenti al modello di dominio.
+**Problema**: Si vuole creare un meccanismo per convertire i modelli di dominio in stringhe (e viceversa) al fine di ottenere un formato di rappresentazione facilmente memorizzabile o trasmissibile (JSON, XML, testo semplice). Occorre aggiungere tale funzionalità in modo indipendente dal dominio applicativo.
 
 \
-**Soluzione**: È stata progettata l'interfaccia `Schema`, una struttura di base che stabilisce il contratto per la validazione dei dati. Per le componenti più complesse sono stati definiti schemi dedicati che ne mappano la struttura su tipi primitivi, facilitando le operazioni di I/O. Infine, per garantire l'aderenza al principio *DRY* e mantenere un'architettura pulita, è stato introdotto il componente `Converter`. Questo agisce secondo il pattern *Data Mapper*, fornendo i metodi bidirezionali per la conversione tra modello di dominio e `Schema`.
+**Soluzione**: È stata sviluppata una *type class* `Codec` che unisce le funzionalità di un `Encoder` e di un `Decoder`, con l'obbiettivo di astrarre il comportamento di codifica e decodifica. Per poter codificare/decodificare un elemento di dominio è quindi necessario definire un `Codec` in grado di eseguire tali operazioni.
+
+#### Rappresentazione del dominio e conversioni bidirezionali
+![codec](diagrams/converter.svg "Rappresentazione UML del `Converter`.")
+
+**Problema**: Si vuole disaccoppiare il modello di dominio dalle sue rappresentazioni esterne, isolandolo da eventuali modifiche al formato dei dati e viceversa. Per ottenere questa indipendenza, è necessario un meccanismo in grado di convertire gli elementi del dominio nella rispettiva rappresentazione e di ricostruirli a partire da essa.
+
+\
+**Soluzione**: È stata progettata l'interfaccia `Schema`, che definisce il contratto per la validazione e la modellazione dei dati su tipi primitivi. Infine, per evitare duplicazioni di codice (principio DRY) e preservare la separazione delle responsabilità, è stato introdotto il componente `Converter`. Ispirandosi al pattern *Data Mapper*, il Converter incapsula la logica di conversione bidirezionale tra le entità del dominio e i relativi `Schema`.
 
 #### Codifica e decodifica json
 ![codec](diagrams/jsoncodec.svg "Rappresentazione UML dell'applicazione del pattern *Adapter* per adattare un `Converter` e un sistema di serializzazione esterno dentro l'interfaccia `Codec`.")
