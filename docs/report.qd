@@ -400,16 +400,22 @@ Occorre rendere facile modificare il significato di *vicino* in caso di cambiame
 ### Collisioni
 
 #### Pianificazione delle collisioni
-![collisions_output](diagrams/collisions-01.svg "Rappresentazione UML dell'applicazione del pattern *Command* per la definizione delle azioni da compiere")
+![collisions_output](diagrams/collisions-01.svg "Rappresentazione UML dell'applicazione del pattern *Command* per la definizione delle azioni da compiere"){#collisions_output}
 
-**Problema**: Mantenere il principio di singola responsabilità (SRP), riservando al solo modulo di simulazione l'aggiornamento dello stato dei robot. Di conseguenza, la fase di gestione delle collisioni deve limitarsi a determinare chi debba eseguire un'azione e quale azione compiere.\
-**Soluzione**: Seguendo il pattern *Command*, sono state create una serie di `Action` (comandi), che definiscono cosa un robot devrà fare in una fase futura. Il `CollisionHandler` è la componente che ha il compito di assegnare una `Action` ad ogni robot durante la risoluzione delle collisioni, comportandosi quindi da agente pianificatore e senza cambiare lo stato della simulazione.
+**Problema**: Mantenere il principio di singola responsabilità (SRP), riservando al solo modulo di simulazione l'aggiornamento dello stato dei robot. Di conseguenza, la fase di gestione delle collisioni deve limitarsi a determinare chi debba eseguire un'azione e quale azione compiere.
+
+\
+**Soluzione**: Seguendo il pattern *Command* (Figura .ref {collisions_output} ), sono state create una serie di `Action` (comandi), che definiscono cosa un robot devrà fare in una fase futura. Il `CollisionHandler` è la componente che ha il compito di assegnare una `Action` ad ogni robot durante la risoluzione delle collisioni, comportandosi quindi da agente pianificatore e senza cambiare lo stato della simulazione.
 
 #### Configurazione delle collisioni
-![collisions_configuration](diagrams/collisions-02.svg "Rappresentazione UML dell'applicazione del pattern *Separation of mechanism and policy* per gestire molteplici configurazioni.")
+![collisions_configuration](diagrams/collisions-02.svg "Rappresentazione UML dell'applicazione del pattern *Separation of mechanism and policy* per gestire molteplici configurazioni."){#collisions_configuration}
 
-**Problema**: La gestione delle collisioni deve essere facilmente configurabile, separando i concetti di *chi* deve fare e di *cosa* deve essere fatto.\
-**Soluzione**: La `SelectionPolicy` è la componente che si occupa di scegliere chi vince (e chi perde) nelle dispute per una posizione. Il `CollisionHandler`, dopo aver ottenuto il risultato di una scelta della `SelectionPolicy`, definisce un'azione da compiere per ogni robot coinvolto nella collisione. In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è possibile ottenere $ n \times m $ gestioni di collisioni diverse.
+**Problema**: La gestione delle collisioni deve essere facilmente configurabile, separando i concetti di *chi* deve fare e di *cosa* deve essere fatto.
+
+\
+**Soluzione**: Sono state create due componenti fondamentali seguendo il principio di *Separation of mechanism and policy* (Figura .ref {collisions_configuration} ):
+- La `SelectionPolicy` è la componente che si occupa di scegliere chi vince (e chi perde) nelle dispute per una posizione.
+- Il `CollisionHandler`, dopo aver ottenuto il risultato di una scelta della `SelectionPolicy`, definisce un'azione da compiere per ogni robot coinvolto nella collisione. In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è possibile ottenere $ n \times m $ gestioni di collisioni diverse.
 
 #### Riusabilità dei risolutori
 ![collisions_reusability](diagrams/collisions-03.svg "Rappresentazione UML dell'applicazione del pattern *Behavior Parameterization* al `Resolver`.")
@@ -420,21 +426,27 @@ Occorre rendere facile modificare il significato di *vicino* in caso di cambiame
 ### Serializzazione
 
 #### Codifica/decodifica dei modelli di dominio
-![codec](diagrams/codec.svg "Rappresentazione UML dell'applicazione del pattern *Codec* con *Interface Segregation Principle*.")
+![codec](diagrams/codec.svg "Rappresentazione UML dell'applicazione del pattern *Codec* con *Interface Segregation Principle*."){#codec}
 
-**Problema**: Si vuole creare un modo per salvare e caricare i modelli di dominio in/da uno storage esterno.\
-**Soluzione**: È stato implementato un `Codec`, che rappresenta l'unione di un `Encoder` e di un `Decoder`. Il `Codec` è quindi in grado di codificare e decodificare i modelli di dominio tramite l'utilizzo dei `Converter`. L'implementazione segue l'*Interface Segregation Principle* e il pattern *Codec*.
+**Problema**: Si vuole creare un modo per salvare e caricare i modelli di dominio in/da uno storage esterno.
+
+\
+**Soluzione**: È stato implementato un `Codec`, che rappresenta l'unione di un `Encoder` e di un `Decoder`. Il `Codec` è quindi in grado di codificare e decodificare i modelli di dominio tramite l'utilizzo dei `Converter`. L'implementazione (Figura .ref {codec} ) segue l'*Interface Segregation Principle* per separare le responsabilità del `Decoder` e dell'`Encoder` e il pattern *Codec*, unendo le due componenti in una sola responsabile di tutti i .
 
 #### Serializzazione dei modelli di dominio
 ![codec](diagrams/converter.svg "Rappresentazione UML dell'applicazione del pattern *Data Mapper*.")
 
-**Problema**: Definire un meccanismo robusto per la serializzazione e deserializzazione delle entità appartenenti al modello di dominio.\
+**Problema**: Definire un meccanismo robusto per la serializzazione e deserializzazione delle entità appartenenti al modello di dominio.
+
+\
 **Soluzione**: È stata progettata l'interfaccia `Schema`, una struttura di base che stabilisce il contratto per la validazione dei dati. Per le componenti più complesse sono stati definiti schemi dedicati che ne mappano la struttura su tipi primitivi, facilitando le operazioni di I/O. Infine, per garantire l'aderenza al principio *DRY* e mantenere un'architettura pulita, è stato introdotto il componente `Converter`. Questo agisce secondo il pattern *Data Mapper*, fornendo i metodi bidirezionali per la conversione tra modello di dominio e `Schema`.
 
 #### Codifica e decodifica json
 ![codec](diagrams/jsoncodec.svg "Rappresentazione UML dell'applicazione del pattern *Adapter* per adattare un `Converter` e un sistema di serializzazione esterno dentro l'interfaccia `Codec`.")
 
-**Problema**: Si vuole creare un sistema in grado di convertire modelli di dominio in stringhe in formato json e viceversa.\
+**Problema**: Si vuole creare un sistema in grado di convertire modelli di dominio in stringhe in formato json e viceversa.
+
+\
 **Soluzione**: È stato creato un `JsonCodec` che permette di leggere e scrivere in formato json, trasformando i modelli di dominio in stringhe grazie all'utilizzo dei `Converter`, che vengono usati in due modalità:
 - Lettura: una stringa in input viene trasformata in uno `Schema`, che a sua volta viene convertito nel rispettivo modello di dominio.
 - Scrittura: un modello di dominio viene convertito in uno `Schema` e poi trasformato in una stringa.
@@ -444,7 +456,9 @@ Occorre rendere facile modificare il significato di *vicino* in caso di cambiame
 #### Lettura/scrittura dei dati su storage
 ![repository](diagrams/repository.svg "Rappresentazione UML dell'applicazione del pattern *Bridge* per separare l'utilizzo del file system dalla serializzazione (che dipende dal `Codec`).")
 
-**Problema**: Si vuole creare un sistema in grado di leggere e scrivere dati in uno storage.\
+**Problema**: Si vuole creare un sistema in grado di leggere e scrivere dati in uno storage.
+
+\
 **Soluzione**: È stata creata l'interfaccia `Repository`, che rappresenta un punto di accesso ad uno storage (database, file system, etc.) con metodi di scrittura e lettura. Nel caso di *Sentinel* è stato scelto di utilizzare file json sul file system.
 
 <!-- Chapter: Sviluppo  -->
@@ -461,19 +475,10 @@ L'obiettivo prefissato in fase di progettazione era il raggiungimento di una cop
 ## Note di sviluppo
 
 - Utilizzo di *Type classes*:
-    - [`Converter`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/boundary/serialization/Converter.scala) (trait)
 - Utilizzo di *Abstract Data Types*:
-    - [`RobotId`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/core/robot/RobotId.scala)
 - Utilizzo di *Module types*:
-    - [`CollisionChecker`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/core/collisions/CollisionChecker.scala)
-    - [Tutti i `Converter`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/tree/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/boundary/serialization/converters) (implementazioni)
 - Utilizzo di *Context bounds*:
-    - [`JsonCodec`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/boundary/serialization/JsonSerialization.scala#L18)
-    - [`FileRepository`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/boundary/persistence/FileRepository.scala#L15)
 - Utilizzo di *For-comprehension*:
-    - [`MissionSchema`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/boundary/serialization/schemas/MissionSchema.scala)
-    - [`Phase`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/core/simulation/Phase.scala)
-    - [`Resolver`](https://github.com/PPS-25-CFM/PPS-25-Sentinel/blob/34fa31ee2b28e2990bffb1cafb0d092e32910ffb/src/main/scala/it/unibo/sentinel/core/collisions/Resolver.scala#L75)
 
 <!-- Chapter: Commenti finali -->
 .align {end} 
