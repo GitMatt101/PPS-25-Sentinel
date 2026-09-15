@@ -2,18 +2,18 @@ package it.unibo.sentinel.boundary.serialization
 
 import it.unibo.sentinel.boundary.serialization.{Codec, Converter, Schema}
 import it.unibo.sentinel.boundary.serialization.Codec.Validation
+import it.unibo.sentinel.boundary.serialization.converters.ScenarioConverter
 import upickle.default.{ReadWriter, read, write}
 import scala.util.Try
 import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.boundary.serialization.schemas.*
-import it.unibo.sentinel.boundary.serialization.converters.*
 import it.unibo.sentinel.core.scenario.Scenario
-import it.unibo.sentinel.boundary.serialization.converters.ScenarioConverter.given
-import it.unibo.sentinel.core.mission.Mission
 import it.unibo.sentinel.core.scenario.RobotClass
 import it.unibo.sentinel.core.scenario.Policies.*
 
 object JsonSerialization:
+  import Converter.given
+  import ScenarioConverter.given
 
   private final class JsonCodec[Model, ModelSchema <: Schema: ReadWriter](using
       converter: Converter[Model, ModelSchema]
@@ -48,11 +48,7 @@ object JsonSerialization:
   given ReadWriter[CollisionAvoidance] = ReadWriter.derived
   given ReadWriter[ScenarioSchema] = ReadWriter.derived
 
-  given Converter[Mission, MissionSchema] = MissionConverter
-  given Converter[Warehouse, WarehouseSchema] = WarehouseConverter
-
   given Codec[Warehouse] = new JsonCodec[Warehouse, WarehouseSchema]
-
   given (using
       warehouse: String => Either[Validation, Warehouse]
   ): Codec[Scenario] = JsonCodec[Scenario, ScenarioSchema]
