@@ -35,7 +35,8 @@ class TaskConverterSpec extends UnitTest with ConverterBehavior:
       TaskConverter.toDomain(schema).shouldBe(Right(model))
 
     "encode and decode a Then task" in:
-      val model = Task.pickAndDrop(Item.Computer, Position(1, 1), Position(2, 2))
+      val model =
+        Task.pickAndDrop(Item.Computer, Position(1, 1), Position(2, 2))
       val schema = TaskSchema.Then(
         TaskSchema.Single(
           ActionSchema.PickUp(ItemSchema.Computer(1.0), PositionSchema(1, 1))
