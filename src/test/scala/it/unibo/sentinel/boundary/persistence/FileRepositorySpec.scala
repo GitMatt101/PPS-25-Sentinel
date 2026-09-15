@@ -1,14 +1,14 @@
 package it.unibo.sentinel.boundary.persistence
 
 import it.unibo.sentinel.UnitTest
+import org.mockito.Mockito
 import it.unibo.sentinel.boundary.serialization.Codec
 import it.unibo.sentinel.boundary.serialization.Codec.Validation
-import org.mockito.Mockito
 
 class FileRepositorySpec extends UnitTest:
 
   private val testNumber: Int = 123
-  private val extension = "txt"
+  private val extension: String = "txt"
   given codec: Codec[Int] = Mockito.mock(classOf[Codec[Int]])
   Mockito
     .when(codec.encode(testNumber))
@@ -30,16 +30,14 @@ class FileRepositorySpec extends UnitTest:
 
       "create a new one when it doesn't exist" in withTemporaryFile { file =>
         os.exists(file) shouldBe false
-        val result = repo.save(testNumber, file)
-        result shouldBe Right(())
+        repo.save(testNumber, file) shouldBe Right(())
         os.exists(file) shouldBe true
         os.read(file) shouldBe testNumber.toString
       }
 
       "overwrite the existing one" in withTemporaryFile { file =>
         os.write(file, "old_content")
-        val result = repo.save(testNumber, file)
-        result shouldBe Right(())
+        repo.save(testNumber, file) shouldBe Right(())
         os.read(file) shouldBe testNumber.toString
       }
 
@@ -53,6 +51,7 @@ class FileRepositorySpec extends UnitTest:
       "return FileNotFound if the file does not exist" in withTemporaryFile {
         file =>
           val fakePath = file / os.up / s"fake_file.$extension"
-          val result = repo.load(fakePath)
-          result shouldBe Left(Validation.FileNotFound(fakePath.toString))
+          repo.load(fakePath) shouldBe Left(
+            Validation.FileNotFound(fakePath.toString)
+          )
       }
