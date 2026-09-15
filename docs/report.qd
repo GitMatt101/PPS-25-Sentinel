@@ -409,7 +409,7 @@ Occorre rendere facile modificare il significato di *vicino* in caso di cambiame
 **Problema**: Mantenere il principio di singola responsabilità (SRP), riservando al solo modulo di simulazione l'aggiornamento dello stato dei robot. Di conseguenza, la fase di gestione delle collisioni deve limitarsi a determinare chi debba eseguire un'azione e quale azione compiere.
 
 \
-**Soluzione**: Seguendo il pattern *Command* (Figura .ref {collisions_output} ), sono state create una serie di `Action` (comandi), che definiscono cosa un robot devrà fare in una fase futura. Il `CollisionHandler` è la componente che ha il compito di assegnare una `Action` ad ogni robot durante la risoluzione delle collisioni, comportandosi quindi da agente pianificatore e senza cambiare lo stato della simulazione.
+**Soluzione**: Seguendo il pattern *Command* (Figura .ref {collisions_output}), sono state create una serie di `Action` (comandi), che definiscono cosa un robot devrà fare in una fase futura. Il `CollisionHandler` è la componente che ha il compito di assegnare una `Action` ad ogni robot durante la risoluzione delle collisioni, comportandosi quindi da agente pianificatore e senza cambiare lo stato della simulazione.
 
 #### Configurazione delle collisioni
 ![collisions_configuration](diagrams/collisions-02.svg "Rappresentazione UML dell'applicazione del pattern *Separation of mechanism and policy* per gestire molteplici configurazioni."){#collisions_configuration}
@@ -417,7 +417,7 @@ Occorre rendere facile modificare il significato di *vicino* in caso di cambiame
 **Problema**: La gestione delle collisioni deve essere facilmente configurabile, separando i concetti di *chi* deve fare e di *cosa* deve essere fatto.
 
 \
-**Soluzione**: Sono state create due componenti fondamentali seguendo il principio di *Separation of mechanism and policy* (Figura .ref {collisions_configuration} ):
+**Soluzione**: Sono state create due componenti fondamentali seguendo il principio di *Separation of mechanism and policy* (Figura .ref {collisions_configuration}):
 - La `SelectionPolicy` è la componente che si occupa di scegliere chi vince (e chi perde) nelle dispute per una posizione.
 - Il `CollisionHandler`, dopo aver ottenuto il risultato di una scelta della `SelectionPolicy`, definisce un'azione da compiere per ogni robot coinvolto nella collisione.
 
@@ -448,12 +448,12 @@ In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è po
 **Soluzione**: È stata progettata l'interfaccia `Schema`, che definisce il contratto per la validazione e la modellazione dei dati su tipi primitivi. Infine, per evitare duplicazioni di codice (principio DRY) e preservare la separazione delle responsabilità, è stato introdotto il componente `Converter`. Ispirandosi al pattern *Data Mapper*, il Converter incapsula la logica di conversione bidirezionale tra le entità del dominio e i relativi `Schema`.
 
 #### Codifica e decodifica json
-![codec](diagrams/jsoncodec.svg "Rappresentazione UML dell'applicazione del pattern *Adapter* per adattare un `Converter` e un sistema di serializzazione esterno dentro l'interfaccia `Codec`.")
+![jsoncodec](diagrams/jsoncodec.svg "Rappresentazione UML dell'applicazione del pattern *Adapter* per adattare un `Converter` e un sistema di serializzazione esterno dentro l'interfaccia `Codec`."){#jsoncodec}
 
 **Problema**: Si vuole creare un sistema in grado di convertire modelli di dominio in stringhe in formato json e viceversa.
 
 \
-**Soluzione**: È stato creato un `JsonCodec` che permette di leggere e scrivere in formato json, trasformando i modelli di dominio in stringhe grazie all'utilizzo dei `Converter`, che vengono usati in due modalità:
+**Soluzione**: È stato creato un `JsonCodec` (Figura .ref {jsoncodec}) che permette di leggere e scrivere in formato json con una libreria esterna, trasformando i modelli di dominio in stringhe grazie all'utilizzo dei `Converter`, che vengono usati in due modalità:
 - Lettura: una stringa in input viene trasformata in uno `Schema`, che a sua volta viene convertito nel rispettivo modello di dominio.
 - Scrittura: un modello di dominio viene convertito in uno `Schema` e poi trasformato in una stringa.
 
