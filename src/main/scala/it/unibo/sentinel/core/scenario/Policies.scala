@@ -59,9 +59,9 @@ object Policies:
       */
     def apply(rng: Random)(using nav: Navigator): Selector = this match
       case Nearest       => Selector.Nearest(nav)
-      case Cycle         => Selector.CycleSelector()
+      case Cycle         => Selector.Cycle()
       case Random        => Selector.RandomSelector(rng)
-      case LeastWorkload => Selector.LeastWorkload()
+      case LeastWorkload => Selector.LeastWorkload
 
   /** Selection policies, i.e. how to choose which robot wins in a collision.
     */
