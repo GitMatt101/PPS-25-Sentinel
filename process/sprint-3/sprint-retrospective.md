@@ -9,7 +9,8 @@
 - Aggiungere priorità sulle missioni
 - Aggiungere gli oggetti e gli scaffali
 - Aggiungere comandi alla GUI: avanti, indietro, pausa, play
-
+- Aggiungere le statistiche a fine simulazione
+  
 ## Analisi
 
 Nonostante il carico di lavoro elevato, l'obbiettivo è stato raggiunto ma con qualche difficoltà a causa di problemi tecnici fuori dal nostro controllo che hanno rallentato lo sviluppo (outage di GitHub e problemi con la rete WIFI universitaria).
