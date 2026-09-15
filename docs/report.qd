@@ -44,7 +44,7 @@ ai tempi, alle distanze percorse e all’utilizzo dei robot.
 magazzini
 diversi e di definire, per uno stesso magazzino, scenari con flotte, missioni e politiche gestionali diverse.
 - **RB-02** *Osservazione del comportamento*: Il sistema deve consentire di esaminare come le missioni vengono assegnate
-ed eseguite e come le interazioni tra robo influenzano l'avanzamento della simulazione.
+ ed eseguite e come le interazioni tra robot influenzano l'avanzamento della simulazione.
 - **RB-03** *Valutazione dei risultati*: Il sistema deve fornire indicatori quantitativi che permettano all’utente di
 confrontare gli esiti di scenari differenti.
 
@@ -83,19 +83,19 @@ come le missioni vengono allocate ai robot.
 
 - **RFU-08** *Scelta della politica di gestione delle collisioni*: l'utente deve poter scegliere quale politica di
 gestione per le collisioni adottare, combinando un'azione (attesa, ricalcolo del percorso) con un criterio di selezione
-che decide quali robot _non_ eseguono l'azione (casuale, priorità, tempo rimanente).
+che decide quali robot eseguono l'azione (casuale, priorità, tempo rimanente).
 
 - **RFU-09** *Riutilizzo delle configurazioni*: l'utente deve poter salvare e riaprire magazzini e scenari dal file
 system.
 
 - **RFU-10** *Avvio della simulazione*: l'utente deve poter avviare una simulazione scegliendo quale scenario eseguire
-e impostare facoltivamente un limite massimo di passi di esecuzione.
+e impostare facoltativamente un limite massimo di passi di esecuzione.
 
 - **RFU-11** *Osservazione della simulazione*: l'utente deve poter consultare l'esecuzione della simulazione, osservando
 i comportamenti dei robot, quali percorsi vengono scelti, lo stato delle missioni e gli eventi accaduti al passo
 precedente.
 
-- **RFU-12** *Controllo della simulazione*: durante una simulazione, l'utente deve poter sposendere e riprendere
+- **RFU-12** *Controllo della simulazione*: durante una simulazione, l'utente deve poter sospendere e riprendere
 l'avanzamento automatico, avanzare di un passo e consultare il passo precedente.
 
 - **RFU-13** *Consultazione dei risultati*: Alla conclusione dell'esecuzione, il sistema deve presentare il report
@@ -118,10 +118,10 @@ La priorità deve essere un intero compreso tra 1 e 10, con valori maggiori corr
 I trasportatori (carrier) devono poter accettar anche missioni di trasporto merce e consentire il prelievo di un oggetto
 solo quando il carico risultante non supera la loro capacità. Le missioni assegnate a ciascun robot devono essere
 eseguite nell'ordine della relativa coda. Le caratteristiche di ogni classe di robot sono:
-    - *Drone*: nessuna capacità di carico, 3 missioni massimo assegnabili contemporaneamente e sono veloci
-    (non devono attendere nessuna unità temporale oltre al costo della prossima cella).
+    - *Drone*: nessuna capacità di carico, un massimo di 3 missioni assegnabili contemporaneamente e movimenti
+    istantanei, privi di tempi di attesa oltre al costo della cella successiva.
     - *Carrier*: possono caricare al massimo 50 unità di peso, possono accettare fino a 5 missioni contemporaneamente ma
-    sono più lenti dei droni (devono attendere 1 passo in più per ogni cella rispetto ad un drone).
+    sono più lenti dei droni (devono attendere 1 passo in più per ogni cella rispetto ad esso).
     - *Heavy Carrier*: possono caricare al massimo 200 unità di peso ma possono accettare solo 1 missione alla volta e
     sono molto lenti (devono attendere 2 passi in più per ogni cella rispetto al drone)
 
@@ -129,11 +129,11 @@ eseguite nell'ordine della relativa coda. Le caratteristiche di ogni classe di r
 secondo la politica configurata: vicinanza, selezione ciclica, minor carico di lavoro oppure selezione casuale.
 In assenza di un candidato, la missione deve rimanere in attesa, continuando a essere soggetta alla propria scadenza.
 Il carico di lavoro è il numero di missioni assegnate, inclusa quella corrente. Se un robot non ha abbastanza capacità
-di carico per trasportare un oggetto, allora il robot non può accettare la missione.
+di carico per trasportare un oggetto, allora non può accettare la missione.
 
 - **RFS-05** *Calcolo dei percorsi*: i percorsi devono attraversare esclusivamente celle consentite e raggiungere la
 destinazione dell’azione corrente. Per il prelievo, la destinazione deve essere un punto di interazione dello scaffale.
-Ogni metrica permette di ottenere un percorso ottimale:
+Ogni metrica permette di ottenere un percorso ottimale rispetto ad un punteggio.
 Le metriche disponibili devono considerare rispettivamente il numero di passi (*distanza*), la somma dei costi temporali
 (*tempo*) oppure una penalizzazione della vicinanza agli ostacoli (*ostacoli*).
 
@@ -148,7 +148,7 @@ destinazione. Una consegna deve completarsi dopo il prelievo e il successivo dep
 
 - **RFS-08** *Scadenze*:  la scadenza deve rappresentare il numero di tick rimanenti dalla creazione della missione.
 A ogni passo il sistema deve aggiornare le scadenze prima di eseguire le nuove azioni.
-Una missione il cui tempo è esaurito deve fallire.˙
+Una missione il cui tempo è esaurito deve fallire.
 
 - **RFS-09** *Stati delle missioni*: il sistema deve distinguere missioni in attesa di assegnazione, assegnate,
 completate e fallite. Una missione rimane assegnata fino a che non raggiunge uno stato terminale.
@@ -161,9 +161,9 @@ Completamento e fallimento sono stati terminali.
 oppure quando viene raggiunto il limite temporale impostato. Al raggiungimento del limite, le missioni ancora attive
 devono essere dichiarate fallite.
 
-- **RFS-12** *Navigazione temporale*: l’arretramento deve consentire di consultare gli stati già prodotti.
-Il successivo avanzamento deve ripresentare la storia disponibile e proseguire la simulazione quando raggiunge l’ultimo
-stato calcolato.
+- **RFS-12** *Navigazione temporale*: l'arretramento consente di consultare gli stati precedentemente generati.
+Riprendendo l'avanzamento, si riparte dal punto in cui ci si trova, ripercorrendo la cronologia esistente fino
+all'ultimo stato calcolato per poi proseguire la simulazione.
 
 - **RFS-13** *Criterio di vicinanza*: i vicini di una cella sono le celle poste in alto, in basso, a sinistra e a destra di essa.
 Le celle diagonali non sono considerate vicine.
@@ -174,7 +174,7 @@ Le celle diagonali non sono considerate vicine.
     - Numero di missioni totali, completate e fallite
     - Percentuale di missioni completate su totale
     - Produttività complessiva, intesa come il rapporto tra il numero di missioni completate e il numero di passi eseguiti
-    - Produttività per robot intesa come produttività complessiva divisa per il numero di robot presenti nello scenario.
+    - Produttività per robot, intesa come produttività complessiva divisa per il numero di robot presenti nello scenario.
     - Tempo medio trascorso dall'assegnazione al completamento delle missioni
     - Tempo massimo trascorso dall'assegnazione al completamento delle missioni
     - Distanza totale percorsa
@@ -184,7 +184,7 @@ Le celle diagonali non sono considerate vicine.
 
 ### Requisiti non funzionali
 
-- **RNF-01** *Portabilità*: l'applicazione deve essere eseguibile su sistemi *Windows*, *Linux* e *macOs*.
+- **RNF-01** *Portabilità*: l'applicazione deve essere eseguibile su sistemi *Windows*, *Linux* e *MacOs*.
 
 ### Requisiti di implementazione
 
@@ -239,7 +239,7 @@ Uno **scenario** è una configurazione operativa completa del magazzino e defini
 - l'insieme delle missioni da completare durante la simulazione.
 - le politiche gestionali che determinano il comportamento del sistema:
   - assegnazione delle missioni
-  - assegnazione dei percorsi
+  - calcolo dei percorsi
   - gestione dei conflitti tra robot
 
 Tra le politiche di assegnazione delle missioni (Figura .ref {assignment})  si distinguono:
@@ -311,7 +311,7 @@ dei conflitti. L’avanzamento del dominio avviene per passi discreti, indipende
 cui vengono eseguiti e dalla loro rappresentazione grafica.
 
 Il package `control` comprende i _controller_, che interpretano i comandi dell’utente e coordinano le operazioni
-sul modello. Gli `Editor` gestiscono la costruzione e la modifica di `Warehouse` e `Scenario`, mentre l’`Engine`
+sul modello. Gli `Editor` gestiscono la costruzione e la modifica di `Warehouse` e `Scenario`, mentre `Engine`
 regola l’esecuzione temporale di `Simulation`, consentendo di sospenderla, riprenderla e consultarne i
 passi.
 
@@ -322,7 +322,7 @@ dallo specifico framework grafico.
 
 Per integrare le interazioni dell’utente, l’esecuzione temporizzata e gli aggiornamenti dell’interfaccia, il
 progetto sfrutta le astrazioni funzionali e reattive fornite da `Monix`. Tali astrazioni sono principalmente due:
-`Observable`, che rappresenta flussi di eventi o stati, e `Task`, che descrive operazioni differibili ed
+`Observable`, che rappresenta flussi di eventi o stati, e `Task`, che descrive operazioni differibili, componibili ed
 eseguibili in modo asincrono.
 
 Il collegamento tra le componenti è affidato ad `Application`, che compone i `Task` per coordinare il ciclo di vita
@@ -367,7 +367,7 @@ Il motore sfrutta tale flusso come indice per accedere ai risultati della simula
 richiesta e memorizzati per future ri-consultazioni, per poi notificarli all'osservatore.
 `ControllableClock` implementa `Timer`, traducendo il trascorrere del tempo e i comandi dell'utente nei tick da
 emettere.
-Questa separazione permette di testare il motore fornendo sequenze di tick controllate (fornendo un implementazione
+Questa separazione permette di testare il motore fornendo sequenze di tick controllate (quindi un'implementazione
 fittizia del `Timer`) e di verificare autonomamente la temporizzazione e la gestione dei comandi.
 
 ### Simulazione e limite di tempo
@@ -395,7 +395,7 @@ Occorre rendere facile modificare il significato di *vicino* in caso di cambiame
 
 \
 **Soluzione** Per risolvere il problema è stato utilizzato il pattern *Strategy* (Figura .ref {adjacency}), fornendo
-`Adjacency` come *strategia contestuale* ad `Warehouse` durante il calcolo dei vicini.
+`Adjacency` come *strategia contestuale* a `Warehouse` durante il calcolo dei vicini.
 
 ### Collisioni
 
@@ -415,7 +415,9 @@ Occorre rendere facile modificare il significato di *vicino* in caso di cambiame
 \
 **Soluzione**: Sono state create due componenti fondamentali seguendo il principio di *Separation of mechanism and policy* (Figura .ref {collisions_configuration} ):
 - La `SelectionPolicy` è la componente che si occupa di scegliere chi vince (e chi perde) nelle dispute per una posizione.
-- Il `CollisionHandler`, dopo aver ottenuto il risultato di una scelta della `SelectionPolicy`, definisce un'azione da compiere per ogni robot coinvolto nella collisione. In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è possibile ottenere $ n \times m $ gestioni di collisioni diverse.
+- Il `CollisionHandler`, dopo aver ottenuto il risultato di una scelta della `SelectionPolicy`, definisce un'azione da compiere per ogni robot coinvolto nella collisione.
+
+In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è possibile ottenere $ n \times m $ gestioni di collisioni diverse.
 
 #### Riusabilità dei risolutori
 ![collisions_reusability](diagrams/collisions-03.svg "Rappresentazione UML dell'applicazione del pattern *Behavior Parameterization* al `Resolver`.")
@@ -519,7 +521,7 @@ Per garantire il corretto funzionamento del progetto e prevenire regressioni, è
 
 Per uniformare la struttura dei test e favorire uno stile di scrittura più dichiarativo e leggibile, è stata definita una classe base `UnitTest` che racchiude le configurazioni comuni e le utility di supporto. Inoltre, per isolare i componenti da testare e simulare dipendenze complesse senza dover ricorrere a dati reali di inizializzazione, è stato integrato [mockito](https://github.com/scalatest/scalatestplus-mockito).
 
-L'obiettivo prefissato in fase di progettazione era il raggiungimento di una copertura del codice (code coverage) pari ad almeno il 70%; la suite di test implementata ha permesso di superare questo target, attestandosi su un valore finale del 93%.
+L'obiettivo prefissato in fase di progettazione era il raggiungimento di una copertura del codice (code coverage) pari ad almeno il 70%; la suite di test implementata ha permesso di superare questo target, attestandosi su un valore finale del 94.78%.
 
 ## Note di sviluppo
 
