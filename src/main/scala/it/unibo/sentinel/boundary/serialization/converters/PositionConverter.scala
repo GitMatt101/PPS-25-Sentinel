@@ -5,6 +5,9 @@ import it.unibo.sentinel.boundary.serialization.Converter
 import it.unibo.sentinel.boundary.serialization.schemas.PositionSchema
 import it.unibo.sentinel.boundary.serialization.Codec.Validation
 
+/** [[Converter]] used to convert from [[Position]] to [[PositionSchema]] and
+  * viceversa.
+  */
 object PositionConverter extends Converter[Position, PositionSchema]:
 
   override def toSchema(model: Position): PositionSchema =

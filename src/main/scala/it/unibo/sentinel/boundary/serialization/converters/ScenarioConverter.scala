@@ -2,36 +2,24 @@ package it.unibo.sentinel.boundary.serialization.converters
 
 import it.unibo.sentinel.boundary.serialization.Converter
 import it.unibo.sentinel.boundary.serialization.schemas.ScenarioSchema
-import it.unibo.sentinel.core.scenario.Spawn
 import it.unibo.sentinel.boundary.serialization.schemas.SpawnSchema
-import it.unibo.sentinel.core.robot.RobotId
-import it.unibo.sentinel.core.robot.value
+import it.unibo.sentinel.boundary.serialization.schemas.MissionSchema
+import it.unibo.sentinel.boundary.serialization.Codec.Validation
 import it.unibo.sentinel.core.mission.Mission
 import it.unibo.sentinel.core.warehouse.Warehouse
 import it.unibo.sentinel.core.warehouse.value
 import it.unibo.sentinel.core.scenario.Scenario
-import it.unibo.sentinel.boundary.serialization.Codec.Validation
-import it.unibo.sentinel.boundary.serialization.schemas.MissionSchema
+import it.unibo.sentinel.core.scenario.Spawn
 import it.unibo.sentinel.core.scenario.Validation as ScenarioValidation
 import it.unibo.sentinel.core.scenario.value
 import it.unibo.sentinel.core.scenario.ScenarioId
 
+/** [[Converter]] used to convert from [[Scenario]] to [[ScenarioSchema]] and
+  * viceversa.
+  */
 object ScenarioConverter:
 
-  private given spawnConverter: Converter[Spawn, SpawnSchema] =
-    new Converter[Spawn, SpawnSchema]:
-
-      override def toSchema(model: Spawn): SpawnSchema =
-        SpawnSchema(
-          model.id.value,
-          PositionConverter.toSchema(model.at),
-          model.ofClass
-        )
-
-      override def toDomain(schema: SpawnSchema): Either[Validation, Spawn] =
-        for pos <- PositionConverter.toDomain(schema.position)
-        yield Spawn(RobotId(schema.id), pos, schema.ofClass)
-
+  private given spawnConverter: Converter[Spawn, SpawnSchema] = SpawnConverter
   private given missionConverter: Converter[Mission, MissionSchema] =
     MissionConverter
 
