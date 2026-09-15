@@ -7,6 +7,7 @@ import it.unibo.sentinel.core.simulation.Tick
 import scala.collection.immutable.Queue
 import it.unibo.sentinel.core.item.Weight
 import it.unibo.sentinel.core.item.Item
+import it.unibo.sentinel.core.mission.Action
 import it.unibo.sentinel.core.mission.Mission
 
 /** Abstracts the concept of a robot, which is an entity capable of accepting
@@ -23,6 +24,11 @@ trait Robot:
     *   the id of the mission that the robot is currently executing
     */
   def mission: Option[MissionId]
+
+  /** @return
+    *   the number of missions currently assigned to the robot.
+    */
+  def workload: Workload = Workload(mission.size)
 
   /** @return
     *   the robot's current operational status
@@ -106,6 +112,34 @@ trait Robot:
     */
   def drop(item: Item): Option[Item]
 
+/** Defines the speed of a [[Robot]] in terms of ticks per position.
+  */
+object Speed:
+  val fast: Tick = Tick.zero
+  val normal: Tick = Tick(1)
+  val slow: Tick = Tick(2)
+
+/** Defines a [[Robot]]'s movement pace
+  *
+  * @param speed
+  *   the number of ticks required per position
+  */
+trait Pace(speed: Tick) extends Robot:
+  abstract override def follow(path: Path): Unit =
+    super.follow(path.slowed(speed))
+
+/** Defines the quantity of [[Missions]] a [[Robot]] can handle.
+  */
+object Capacity:
+  /** The capacity for a robot that can accept only a single mission. */
+  val single = 1
+
+  /** The capacity for a robot that can accept a small number of missions. */
+  val small = 3
+
+  /** The capacity for a robot that can accept a large number of missions. */
+  val large = 5
+
 /** [[Robot]] capable of accepting multiple [[Mission]]s using a queue.
   *
   * @param capacity
@@ -114,6 +148,11 @@ trait Robot:
 trait Queued(capacity: Int) extends Robot:
 
   private var backlog: Queue[MissionId] = Queue.empty
+
+  /** @return
+    *   the remaining queue capacity for new missions.
+    */
+  def remainingCapacity: Int = capacity - backlog.size
 
   /** @return
     *   whether there is queue capacity and the underlying robot can accept
@@ -128,6 +167,11 @@ trait Queued(capacity: Int) extends Robot:
 
   /** @return the head of the mission queue, if any. */
   override def mission: Option[MissionId] = backlog.headOption
+
+  /** @return
+    *   the number of missions in queue, including the one under execution.
+    */
+  override def workload: Workload = Workload(backlog.size)
 
   /** Dequeues the current mission and its queue to the underlying robot. */
   abstract override def release(): Unit =
@@ -144,14 +188,17 @@ object Robot:
     * @return
     *   a new drone with the given id, no missions and idle status
     */
-  def drone(id: RobotId, capacity: Int = 1): Robot = new Drone(id)
+  def drone(id: RobotId, capacity: Int = Capacity.small): Robot = new Drone(id)
     with Queued(capacity)
+    with Pace(Speed.fast)
 
-  def lightCarrier(id: RobotId, capacity: Int = 1): Robot =
-    new Carrier(id, Weight.average) with Queued(capacity)
+  def lightCarrier(id: RobotId, capacity: Int = Capacity.large): Robot =
+    new Carrier(id, Weight.average)
+      with Queued(capacity)
+      with Pace(Speed.normal)
 
-  def heavyCarrier(id: RobotId, capacity: Int = 1): Robot =
-    new Carrier(id, Weight.max) with Queued(capacity)
+  def heavyCarrier(id: RobotId, capacity: Int = Capacity.single): Robot =
+    new Carrier(id, Weight.max) with Queued(capacity) with Pace(Speed.slow)
 
   /** Shared movement logic for all mobile robots.
     */
@@ -220,9 +267,15 @@ object Robot:
     private def currentLoad: Weight =
       bag.map(_.weight).foldLeft(Weight.zero)(_ + _)
 
+    private def requiredWeight(mission: Mission): Weight =
+      mission.task.actions
+        .collect { case Action.PickUp(item, _) => item.weight }
+        .foldLeft(Weight.zero)(_ + _)
+
     override def canAccept(mission: Mission): Boolean =
       mission.isMovementOnly ||
-        (mission.requiresCarrying && currentLoad.value <= maxLoad.value)
+        (mission.requiresCarrying &&
+          (currentLoad + requiredWeight(mission)).value <= maxLoad.value)
 
     override def pick(item: Item): Boolean =
       if (currentLoad + item.weight).value <= maxLoad.value then

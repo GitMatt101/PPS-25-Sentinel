@@ -38,6 +38,9 @@ class PathSpec extends UnitTest:
       "have the cost of its first step as remaining time" in:
         path.remaining shouldBe steps.headOption.value.cost
 
+      "have the correct destination" in:
+        path.destination shouldBe steps.lastOption.map(_.to)
+
     "advanced" should:
 
       "be empty if it was the last step and remaining time is up" in:
@@ -62,3 +65,16 @@ class PathSpec extends UnitTest:
       "decrease the remaining time of the first step by one tick" in:
         val path: Path = Path(Step(Position(1, 0), Tick.unit))
         path.ticked.remaining shouldBe Tick.zero
+
+    "slowed" should:
+
+      "increase the time of each step by the given amount of ticks" in:
+        val path: Path = Path(
+          Step(Position(1, 0), Tick.unit),
+          Step(Position(2, 0), Tick.unit)
+        )
+        val expected = Path(
+          Step(Position(1, 0), Tick(2)),
+          Step(Position(2, 0), Tick(2))
+        )
+        path.slowed(Tick.unit) shouldBe expected

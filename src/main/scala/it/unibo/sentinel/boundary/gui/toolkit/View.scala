@@ -1,34 +1,55 @@
 package it.unibo.sentinel.boundary.gui.toolkit
 
-import it.unibo.sentinel.core.simulation.StepResult
-import it.unibo.sentinel.control.Controller
-import it.unibo.sentinel.core.simulation.Statistics.Report
+import monix.eval.Task
+import monix.execution.{CancelablePromise, Scheduler}
+import monix.reactive.Observable
+import monix.reactive.subjects.ConcurrentSubject
 
-/** Represents a UI responsible for visualizing a given model
+/** Represents a UI responsible for rendering a model.
+  * @tparam M
+  *   the type of the model to render.
   */
-trait View:
-  /** The type of the model to render.
-    */
-  type Model
+trait View[M]:
 
-  /** Loads all the graphics components to visualize the given model
+  /** Renders the given `model` on the UI.
     *
     * @param model
-    *   the current state to display
+    *   the current state to display.
+    * @return
+    *   a [[Task]] that completes when the model is rendered.
     */
-  def render(model: Model): Unit
+  def render(model: M): Task[Unit]
 
-/** A [[View]] that is able to visualize the [[StepResult]] and interact with
-  * the [[Controller]] to control the [[Simulation]].
+/** An interactive UI, which can produce user inputs over time.
   */
-trait SimulationView extends View:
-  type Model = StepResult
+trait Interactive[C]:
+
+  given Scheduler = Scheduler.Implicits.global
+
+  private val sink =
+    ConcurrentSubject.publish[C]
+
+  protected def emit(command: C): Unit =
+    sink.onNext(command)
+
+  /** The user input over time, modeled as an [[Observable]] of commands.
+    */
+  final def commands: Observable[C] = sink
+
+/** An UI that can render a model and produce user inputs over time.
+  */
+trait InteractiveView[M, C] extends View[M] with Interactive[C]
+
+/** An UI that can be dismissed.
+  */
+trait Dismissable:
+
+  private val exit = CancelablePromise[Unit]()
+
+  protected def dismiss(): Unit =
+    exit.trySuccess(())
 
   /** @return
-    *   the [[Controller]] that allows to control the [[Simulation]].
+    *   a [[Task]] that completes when the UI is dismissed.
     */
-  def controller: Controller
-
-/** Displays the report of a completed simulation. */
-trait StatisticsView extends View:
-  type Model = Report
+  final def dismissed: Task[Unit] = Task.fromCancelablePromise(exit)

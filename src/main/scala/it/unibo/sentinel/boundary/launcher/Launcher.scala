@@ -1,49 +1,35 @@
 package it.unibo.sentinel.boundary.launcher
 
-import it.unibo.sentinel.boundary.gui.toolkit.Toolkit
 import it.unibo.sentinel.boundary.gui.fx.FxToolkit
-import it.unibo.sentinel.core.simulation.Simulation
-import it.unibo.sentinel.control.Engine
-import scala.concurrent.duration.*
-import it.unibo.sentinel.core.scenario.Scenario
-import it.unibo.sentinel.control.serialization.Repository
+import monix.execution.Scheduler.Implicits.global
+import it.unibo.sentinel.boundary.persistence.Repository
 import it.unibo.sentinel.core.warehouse.Warehouse
-import it.unibo.sentinel.control.serialization.Codec.Validation
-import it.unibo.sentinel.core.simulation.SimulationId
+import it.unibo.sentinel.boundary.persistence.FileRepository
+import it.unibo.sentinel.core.scenario.Scenario
+import it.unibo.sentinel.boundary.serialization.Codec.Validation
+import it.unibo.sentinel.boundary.serialization.JsonSerialization.given
 
-/** Application launcher.w
+trait Configuration:
+  val extension = "json"
+
+  given Repository[os.Path, Warehouse] =
+    new FileRepository[Warehouse](extension)
+
+  given (String => Either[Validation, Warehouse]) =
+    (warehouseId: String) =>
+      summon[Repository[os.Path, Warehouse]]
+        .load(FileRepository.folderPath / warehouseId)
+
+  given Repository[os.Path, Scenario] =
+    new FileRepository[Scenario](extension)
+
+/** Application launcher.
   *
-  * Uses a [[Toolkit]] to create and setup a [[Window]], which will display the
-  * simulation's [[View]]s.
+  * Runs the [[Application]] on the fx [[Toolkit]], keeping the main thread
+  * alive until the user closes the window.
   */
-object Launcher:
-
-  private val toolkit: Toolkit = FxToolkit
-
+object Launcher extends Configuration:
   def main(args: Array[String]): Unit =
-    for loaded <- loadScenario()
-    yield
-      val id = SimulationId("sim-1")
-      val sim = Simulation.of(id, loaded)
-      val engine: Engine = Engine(sim, 1.second)
-      val window = toolkit.window
-      val panel = toolkit.simulation(engine)
-      val statistics = toolkit.statistics()
-      window.show(panel)
-      window.open()
-      engine.observe(panel.render)
-      engine.observeCompletion: report =>
-        statistics.render(report)
-        window.show(statistics)
-      engine.start()
-
-  def loadScenario(): Either[Validation, Scenario] =
-    import it.unibo.sentinel.control.serialization.JsonSerialization.given
-    import it.unibo.sentinel.control.serialization.FileRepository
-    given warehouseRepo: FileRepository[Warehouse] =
-      new FileRepository[Warehouse]
-    val scenarioRepo: Repository[String, Scenario] =
-      new FileRepository[Scenario]
-    warehouseRepo.save(Dataset.warehouse)
-    scenarioRepo.save(Dataset.scenario)
-    scenarioRepo.load(s"${Dataset.scenario.id}.json")
+    Application(FxToolkit)
+      .start()
+      .runSyncUnsafe()

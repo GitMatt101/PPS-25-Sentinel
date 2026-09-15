@@ -1,7 +1,9 @@
 package it.unibo.sentinel.core.assignment
 
 import it.unibo.sentinel.core.mission.Mission
+import it.unibo.sentinel.core.robot.value
 import it.unibo.sentinel.core.scenario.Placement
+import scala.util.Random
 
 /** Domain strategy interface for selecting the best suitable candidate
   * placement for a given mission.
@@ -48,7 +50,7 @@ object Selector:
     * @param navigator
     *   The spatial navigation routing engine used to compute distances.
     */
-  final case class Nearest(navigator: Navigator) extends Selector:
+  final class Nearest(navigator: Navigator) extends Selector:
 
     /** @param mission
       *   The mission whose destination is evaluated.
@@ -91,9 +93,9 @@ object Selector:
           .map(path => candidate -> path.positions.size)
       reachable.minByOption(_._2).map(_._1)
 
-  /** A stateful selection strategy that cycles through available candidate
+  /** A stateful selection strategy that cycles through available candidate.
     */
-  final case class CycleSelector() extends Selector:
+  final class Cycle extends Selector:
     private var cycle = Vector.empty[Placement]
 
     /** @param mission
@@ -117,3 +119,46 @@ object Selector:
       do cycle = cycle.filterNot(_ == p) :+ p
 
       selected
+
+  /** A workload-based selection strategy that assigns the mission to the
+    * available candidate with the fewest assigned missions.
+    */
+  object LeastWorkload extends Selector:
+
+    /** @param mission
+      *   The mission to be assigned.
+      * @param available
+      *   The pre-filtered collection of available candidate placements.
+      * @return
+      *   [[Some]] candidate [[Placement]] with the lowest workload, or [[None]]
+      *   if no candidates are available.
+      */
+    override protected def selectFromAvailable(
+        mission: Mission,
+        available: Iterable[Placement]
+    ): Option[Placement] =
+      available.minByOption(p => (p.robot.workload, p.robot.id.value))
+
+  /** A random selection strategy that assigns the mission to a uniformly chosen
+    * available candidate.
+    *
+    * @param rng
+    *   The random generator used for the selection.
+    */
+  final class RandomSelector(rng: Random) extends Selector:
+
+    /** @param mission
+      *   The mission to be assigned (ignored, selection is random).
+      * @param available
+      *   The pre-filtered collection of available candidate placements.
+      * @return
+      *   [[Some]] chosen [[Placement]], or [[None]] if no candidates are
+      *   available.
+      */
+    override protected def selectFromAvailable(
+        mission: Mission,
+        available: Iterable[Placement]
+    ): Option[Placement] =
+      val candidates = available.toVector
+      if candidates.isEmpty then None
+      else candidates.lift(rng.nextInt(candidates.size))

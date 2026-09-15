@@ -1,24 +1,46 @@
 package it.unibo.sentinel.boundary.gui.toolkit
 
-import it.unibo.sentinel.control.Controller
+import monix.eval.Task
 
 /** Contains a set of components and methods needed to run the application
   */
 trait Toolkit:
 
-  type W <: Window
-  type V <: View
+  /** The type of the views that [[Window]] can show.
+    */
+  type V
 
   /** [[Window]] to run the application on
     */
-  val window: W { type V = Toolkit.this.V }
+  val window: Window[V]
+
+  /** The menu of the application.
+    */
+  def menu: V & Menu
 
   /** Creates a [[View]] to display a snapshot of the simulation
     *
     * @return
-    *   the simulation [[View]] to display the snapshot
+    *   the [[SimulationView]].
     */
-  def simulation(controller: Controller): V & SimulationView
+  def simulation: V & SimulationView
 
   /** Creates a view for the final simulation report. */
-  def statistics(): V & StatisticsView
+  def statistics: V & StatisticsView
+
+  /** Creates a [[View]] to edit a [[Warehouse]].
+    *
+    * @return
+    *   the [[WarehouseEditorView]].
+    */
+  def editor: V & WarehouseEditorView
+
+  /** Creates a view to configure a scenario's robots, missions and policies. */
+  def scenarioEditor: V & ScenarioEditorView
+
+  /** Shuts down the application.
+    *
+    * @return
+    *   a [[Task]] that completes when the application is shut down
+    */
+  def shutdown(): Task[Unit]

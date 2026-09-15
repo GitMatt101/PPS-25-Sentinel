@@ -12,17 +12,6 @@ import it.unibo.sentinel.core.scenario.Policies.CollisionSelection
 import scala.collection.immutable.ListMap
 import it.unibo.sentinel.core.simulation.Tick
 
-/** Represents the intention of a [[Robot]] to move to a specific [[Position]]
-  *
-  * @param robotId
-  *   the [[Robot]]'s id
-  * @param from
-  *   the [[Robot]]'s current position
-  * @param to
-  *   the destination
-  */
-case class Intent(robotId: RobotId, from: Position, to: Position)
-
 /** Represents a [[Robot]] placed in a [[Position]] in the [[Warehouse]].
   *
   * @param robot
@@ -33,12 +22,11 @@ case class Intent(robotId: RobotId, from: Position, to: Position)
 final case class Placement(robot: Robot, at: Position):
 
   /** @return
-    *   an intent to where the robot wants to move
+    *   the [[Position]] that the [[Robot]] wants to move to this step.
     */
-  def intent: Intent =
-    (robot.next, robot.remaining) match
-      case (Some(to), Tick.zero) => Intent(robot.id, at, to)
-      case _                     => Intent(robot.id, at, at)
+  def next: Position = (robot.next, robot.remaining) match
+    case (Some(pos), Tick.zero) => pos
+    case _                      => at
 
 enum RobotClass:
   case Drone
@@ -61,11 +49,11 @@ final case class Spawn(id: RobotId, at: Position, ofClass: RobotClass):
     *   the [[Placement]] of the [[Robot]] to spawn in the [[Warehouse]].
     */
   def toPlacement: Placement = ofClass match
-    case RobotClass.Drone   => Placement(Robot.drone(id, 3), at)
+    case RobotClass.Drone   => Placement(Robot.drone(id), at)
     case RobotClass.Carrier =>
-      Placement(Robot.lightCarrier(id, 5), at)
+      Placement(Robot.lightCarrier(id), at)
     case RobotClass.HeavyCarrier =>
-      Placement(Robot.heavyCarrier(id, 1), at)
+      Placement(Robot.heavyCarrier(id), at)
 
 enum Validation:
   /** @param position
@@ -137,6 +125,18 @@ trait Scenario:
     *   a new [[Scenario]] with the given identifier.
     */
   def withId(id: ScenarioId): Scenario
+
+  /** @return
+    *   the seed governing all random choices in the [[Scenario]].
+    */
+  def seed: Long
+
+  /** @param seed
+    *   the new seed for the scenario.
+    * @return
+    *   a new [[Scenario]] with the given seed.
+    */
+  def withSeed(seed: Long): Scenario
 
   /** @return
     *   the [[Warehouse]] the [[Scenario]] refers to.
@@ -221,6 +221,22 @@ trait Scenario:
     */
   def load(mission: Mission): Either[Validation, Scenario]
 
+  /** @param rid
+    *   the [[RobotId]] of the [[Robot]] to remove.
+    * @return
+    *   a new [[Scenario]] without the given [[Robot]]'s [[Spawn]]. If no
+    *   [[Spawn]] with that id exists, the [[Scenario]] is returned unchanged.
+    */
+  def remove(rid: RobotId): Scenario
+
+  /** @param mid
+    *   the [[MissionId]] of the [[Mission]] to unload.
+    * @return
+    *   a new [[Scenario]] without the given [[Mission]]. If no [[Mission]] with
+    *   that id exists, the [[Scenario]] is returned unchanged.
+    */
+  def unload(mid: MissionId): Scenario
+
   /** Builds and initializes the simulation [[Environment]] from this
     * [[Scenario]].
     *
@@ -248,6 +264,7 @@ object Scenario:
   private final case class Blueprint(
       id: ScenarioId,
       warehouse: Warehouse,
+      seed: Long = 42L,
       spawns: Seq[Spawn] = Seq.empty,
       missions: Seq[Mission] = Seq.empty,
       routing: Routing = Routing.Distance,
@@ -257,6 +274,8 @@ object Scenario:
   ) extends Scenario:
 
     override def withId(id: ScenarioId): Scenario = copy(id = id)
+
+    override def withSeed(seed: Long): Scenario = copy(seed = seed)
 
     override def build: Environment =
       Environment(
@@ -290,6 +309,12 @@ object Scenario:
         _ <- checkTask(mission)
       yield copy(missions = missions :+ mission)
 
+    override def remove(rid: RobotId): Scenario =
+      copy(spawns = spawns.filterNot(_.id == rid))
+
+    override def unload(mid: MissionId): Scenario =
+      copy(missions = missions.filterNot(_.id == mid))
+
     private def checkTask(mission: Mission): Either[Validation, Unit] =
       mission.task.actions
         .flatMap(checkAction)
@@ -297,6 +322,8 @@ object Scenario:
         .toLeft(())
 
     private def checkAction(action: Action): Option[Validation] = action match
+      case Action.Move(to) if !warehouse.isTraversable(to) =>
+        Some(NotFloorTile(to))
       case Action.PickUp(target, at) =>
         warehouse.tileAt(at).collect { case Tile.Shelf(stored) => stored } match
           case Some(stored) if stored == target => None
