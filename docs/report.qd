@@ -324,6 +324,64 @@ Il `Task` di esecuzione della simulazione viene coordinato con quello dedicato a
 
 ## Design in dettaglio
 
+### Metriche intercambiabili
+
+![metriche intercambiabili](diagrams/metrics.svg "Schema UML dell'applicazione del pattern *Strategy* per la definizione di metriche intercambiabili."){#routing-strategy}
+
+**Problema** Il calcolo dei percorsi deve supportare criteri di ottimizzazione differenti, selezionabili nella
+configurazione dello scenario. Occorre consentire questa variazione evitando di duplicare la logica di ricerca
+per ciascun criterio.
+
+\
+**Soluzione** Per risolvere il problema, è stato utilizzato il pattern *Strategy* per definire diverse metriche di
+ottimizzazione (Figura .ref {routing-strategy}).  Il modulo di routing affida a `Navigator` la ricerca del percorso e richiede, passata come strategia,
+la metrica (`Metric`) per ottenere il *costo* (`Score`) da minimizzare.
+
+### Motore e timer della simulazione
+
+![motore e timer della simulazione](diagrams/engine.svg "Schema UML di `ReactiveEngine`, che utilizza i tick forniti da `Timer` per gestire l’avanzamento della simulazione."){#engine}
+
+**Problema** L'esecuzione della simulazione deve supportare l'avanzamento periodico, la pausa e la navigazione
+tra i passi. Occorre separare la gestione dei risultati dalla logica di temporizzazione e interpretazione dei comandi,
+consentendo di verificare i due comportamenti in modo indipendente.
+
+\
+**Soluzione** Per risolvere il problema, è stata utilizzata la composizione tramite *mixin* (Figura .ref {engine}).
+`ReactiveEngine` *richiede* il contratto `Timer`, che espone il flusso temporale della simulazione (`Observable[Tick]`).
+Il motore sfrutta tale flusso come indice per accedere ai risultati della simulazione, i quali vengono calcolati su
+richiesta e memorizzati per future ri-consultazioni, per poi notificarli all'osservatore.
+`ControllableClock` implementa `Timer`, traducendo il trascorrere del tempo e i comandi dell'utente nei tick da
+emettere.
+Questa separazione permette di testare il motore fornendo sequenze di tick controllate (fornendo un implementazione
+fittizia del `Timer`) e di verificare autonomamente la temporizzazione e la gestione dei comandi.
+
+### Simulazione e limite di tempo
+
+![simulazione e limite di tempo](diagrams/simulation.svg "Schema UML che rappresenta il design della simulazione con un limite di tempo.") {#time-limit}
+
+**Problema** La simulazione deve poter terminare quando tutte le missioni sono concluse oppure al raggiungimento di un
+limite massimo di tick. Occorre aggiungere questo vincolo opzionale senza duplicare la logica di avanzamento
+della simulazione.
+
+\
+**Soluzione** Per risolvere il problema, è stata utilizzata la composizione tramite *stackable trait*
+(Figura .ref {time-limit}).
+`TimeLimit`, quando composto con un'implementazione di `Simulation`, ne estende il comportamento di avanzamento,
+verificando se il limite di tick è stato raggiunto e, in tal caso, terminando la simulazione.
+È stata aggiunta la classe `AbstractSimulation` per condividere la registrazione degli eventi e l'accesso all'ambiente
+della simulazione tra le diverse implementazioni.
+
+### Calcolo delle celle di adiacenza
+
+![Calcolo delle celle di adiacenza di una posizione nel magazzino](diagrams/adjacency.svg "Schema UML dell'applicazione del pattern *Strategy* per il calcolo delle celle di adiacenza.") {#adjacency}
+
+**Problema** Il calcolo delle celle adiacenti dipende dal requisito con cui si considerano vicine due posizioni.
+Occorre rendere facile modificare il significato di *vicino* in caso di cambiamenti nei requisiti.
+
+\
+**Soluzione** Per risolvere il problema è stato utilizzato il pattern *Strategy* (Figura .ref {adjacency}), fornendo
+`Adjacency` come *strategia contestuale* ad `Warehouse` durante il calcolo dei vicini.
+
 ### Collisioni
 
 #### Pianificazione delle collisioni
