@@ -125,47 +125,62 @@ eseguite nell'ordine della relativa coda. Le caratteristiche di ogni classe di r
     - *Heavy Carrier*: possono caricare al massimo 200 unità di peso ma possono accettare solo 1 missione alla volta e
     sono molto lenti (devono attendere 2 passi in più per ogni cella rispetto al drone)
 
-- **RFS-04** *Assegnazione delle missioni*: Il sistema deve scegliere tra i robot che possono accettare la missione
+- **RFS-04** *Assegnazione delle missioni*: il sistema deve scegliere tra i robot che possono accettare la missione
 secondo la politica configurata: vicinanza, selezione ciclica, minor carico di lavoro oppure selezione casuale.
 In assenza di un candidato, la missione deve rimanere in attesa, continuando a essere soggetta alla propria scadenza.
 Il carico di lavoro è il numero di missioni assegnate, inclusa quella corrente. Se un robot non ha abbastanza capacità
 di carico per trasportare un oggetto, allora il robot non può accettare la missione.
 
-- **RFS-05** *Calcolo dei percorsi*: I percorsi devono attraversare esclusivamente celle consentite e raggiungere la
+- **RFS-05** *Calcolo dei percorsi*: i percorsi devono attraversare esclusivamente celle consentite e raggiungere la
 destinazione dell’azione corrente. Per il prelievo, la destinazione deve essere un punto di interazione dello scaffale.
 Ogni metrica permette di ottenere un percorso ottimale:
 Le metriche disponibili devono considerare rispettivamente il numero di passi (*distanza*), la somma dei costi temporali
 (*tempo*) oppure una penalizzazione della vicinanza agli ostacoli (*ostacoli*).
 
-- **RFS-06** *Gestione dei conflitti*: Il sistema deve gestire sia i tentativi di raggiungere la stessa cella sia i
+- **RFS-06** *Gestione dei conflitti*: il sistema deve gestire sia i tentativi di raggiungere la stessa cella sia i
 tentativi di scambio reciproco di posizione. Nei conflitti in cui è possibile scegliere una precedenza, il criterio
 deve essere casuale, basato sulla priorità più alta oppure sulla scadenza più vicina. I robot che cedono devono
 attendere o cercare un percorso alternativo, secondo la politica configurata; se il percorso alternativo non è
 disponibile, devono attendere.
 
-- **RFS-07** *Esecuzione delle missioni*: Una missione di spostamento deve completarsi quando il robot raggiunge la
+- **RFS-07** *Esecuzione delle missioni*: una missione di spostamento deve completarsi quando il robot raggiunge la
 destinazione. Una consegna deve completarsi dopo il prelievo e il successivo deposito dell’oggetto.
 
-- **RFS-08** *Scadenze*:  La scadenza deve rappresentare il numero di tick rimanenti dalla creazione della missione.
+- **RFS-08** *Scadenze*:  la scadenza deve rappresentare il numero di tick rimanenti dalla creazione della missione.
 A ogni passo il sistema deve aggiornare le scadenze prima di eseguire le nuove azioni.
 Una missione il cui tempo è esaurito deve fallire.˙
 
-- **RFS-09** *Stati delle missioni*: Il sistema deve distinguere missioni in attesa di assegnazione, assegnate,
+- **RFS-09** *Stati delle missioni*: il sistema deve distinguere missioni in attesa di assegnazione, assegnate,
 completate e fallite. Una missione rimane assegnata fino a che non raggiunge uno stato terminale.
 Completamento e fallimento sono stati terminali.
 
-- **RFS-10** *Stati dei robot*: Il sistema deve distinguere robot inattivi, pronti a svolgere una missione, in movimento
+- **RFS-10** *Stati dei robot*: il sistema deve distinguere robot inattivi, pronti a svolgere una missione, in movimento
  e temporaneamente in attesa a causa di un conflitto.
 
-- **RFS-11** *Terminazione*: Una simulazione deve terminare quando tutte le missioni hanno raggiunto uno stato terminale
+- **RFS-11** *Terminazione*: una simulazione deve terminare quando tutte le missioni hanno raggiunto uno stato terminale
 oppure quando viene raggiunto il limite temporale impostato. Al raggiungimento del limite, le missioni ancora attive
 devono essere dichiarate fallite.
 
-- **RFS-12** *Navigazione temporale*: L’arretramento deve consentire di consultare gli stati già prodotti.
+- **RFS-12** *Navigazione temporale*: l’arretramento deve consentire di consultare gli stati già prodotti.
 Il successivo avanzamento deve ripresentare la storia disponibile e proseguire la simulazione quando raggiunge l’ultimo
 stato calcolato.
 
-- **RFS-13** *Statistiche*
+- **RFS-13** *Criterio di vicinanza*: i vicini di una cella sono le celle poste in alto, in basso, a sinistra e a destra di essa.
+Le celle diagonali non sono considerate vicine.
+
+- **RFS-13** *Statistiche*: le statistiche devono includere:
+    - Durata della simulazione
+    - Numero di robot che compongono la flotta
+    - Numero di missioni totali, completate e fallite
+    - Percentuale di missioni completate su totale
+    - Produttività complessiva, intesa come il rapporto tra il numero di missioni completate e il numero di passi eseguiti
+    - Produttività per robot intesa come produttività complessiva divisa per il numero di robot presenti nello scenario.
+    - Tempo medio trascorso dall'assegnazione al completamento delle missioni
+    - Tempo massimo trascorso dall'assegnazione al completamento delle missioni
+    - Distanza totale percorsa
+    - Distanza per missione completata, intesa come rapporto tra la distanza totale percorsa e il numero di missioni completate.
+    - Robot più utilizzati, intesi come quelli a cui sono state assegnate più missioni
+    - Robot meno utilizzati, intesi come quelli a cui sono state assegnate meno missioni
 
 ### Requisiti non funzionali
 
