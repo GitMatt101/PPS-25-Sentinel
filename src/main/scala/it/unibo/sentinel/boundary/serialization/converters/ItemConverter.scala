@@ -5,6 +5,8 @@ import it.unibo.sentinel.core.item.Item
 import it.unibo.sentinel.boundary.serialization.schemas.ItemSchema
 import it.unibo.sentinel.boundary.serialization.Codec.Validation
 
+/** [[Converter]] used to convert from [[Item]] to [[ItemSchema]] and viceversa.
+  */
 object ItemConverter extends Converter[Item, ItemSchema]:
 
   override def toSchema(model: Item): ItemSchema =
