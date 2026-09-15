@@ -28,30 +28,26 @@ class FileRepositorySpec extends UnitTest:
 
     "writing a file" should:
 
-      "create a new one when it doesn't exist" in withTemporaryFile { file =>
+      "create a new one when it doesn't exist" in withTemporaryFile: file =>
         os.exists(file) shouldBe false
         repo.save(testNumber, file) shouldBe Right(())
         os.exists(file) shouldBe true
         os.read(file) shouldBe testNumber.toString
-      }
 
-      "overwrite the existing one" in withTemporaryFile { file =>
+      "overwrite the existing one" in withTemporaryFile: file =>
         os.write(file, "old_content")
         repo.save(testNumber, file) shouldBe Right(())
         os.read(file) shouldBe testNumber.toString
-      }
 
     "reading a file" should:
 
-      "read the correct content" in withTemporaryFile { file =>
+      "read the correct content" in withTemporaryFile: file =>
         repo.save(testNumber, file)
         repo.load(file) shouldBe Right(testNumber)
-      }
 
-      "return FileNotFound if the file does not exist" in withTemporaryFile {
+      "return FileNotFound if the file does not exist" in withTemporaryFile:
         file =>
           val fakePath = file / os.up / s"fake_file.$extension"
           repo.load(fakePath) shouldBe Left(
             Validation.FileNotFound(fakePath.toString)
           )
-      }
