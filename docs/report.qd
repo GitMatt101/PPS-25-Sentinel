@@ -466,22 +466,22 @@ In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è po
 ### Missioni
 
 #### Composizione delle attività
-![mission_composition](diagrams/mission-1.svg "Rappresentazione UML dell'applicazione del pattern *Composite* per la composizione delle attività.")
+![mission_composition](diagrams/mission-1.svg "Rappresentazione UML dell'applicazione del pattern *Composite* per la composizione delle attività."){#mission_composition}
 
 **Problema**: Rappresentare attività eterogenee senza proliferazione di sottoclassi, gestendone l'avanzamento per operazioni atomiche interrogabili.
 
 \
-**Soluzione**: Seguendo il pattern *Composite*, `Mission` aggrega un `Task(Action)` articolato in `Single`, `Then` e `Done`, con stato (`Pending`, `Assigned`, `Completed`, `Failed`) gestito secondo il pattern *State* in forma funzionale e immutabile.
+**Soluzione**: Seguendo il pattern *Composite* (Figura .ref {mission_composition}), `Mission` aggrega un `Task(Action)` articolato in `Single`, `Then` e `Done`, con stato (`Pending`, `Assigned`, `Completed`, `Failed`) gestito secondo il pattern *State* in forma funzionale e immutabile.
 
 ### Assegnazione delle missioni
 
 #### Selezione del candidato
-![mission_assignment](diagrams/assignment-1.svg "Rappresentazione UML dell'applicazione dei pattern *Strategy* e *Template Method* per la selezione del candidato.")
+![mission_assignment](diagrams/assignment-1.svg "Rappresentazione UML dell'applicazione del pattern *Template Method* per la selezione del candidato.Le classi `Nearest`, `Cycle`, `LeastWorkload` e `RandomSelector` implementano la propria versione del metodo `selectFromAvailable`."){#mission_assignment}
 
 **Problema**: Valutare i candidati secondo criteri diversi senza alterare la logica di filtraggio e assegnamento.
 
 \
-**Soluzione**: Seguendo i pattern *Strategy* e *Template Method*, il trait `Selector` filtra i robot idonei (`canAccept`) in `choose` e delega la scelta a `selectFromAvailable`, implementato da `Nearest`, `Cycle`, `LeastWorkload` e `RandomSelector`.
+**Soluzione**: Attraverso il pattern *Template Method* (Figura .ref {mission_assignment}), il trait `Selector` definisce l'algoritmo di selezione nel metodo `choose`, che prima filtra i robot idonei tramite `canAccept` e poi delega la scelta finale a `selectFromAvailable`. Quest'ultimo viene personalizzato dalle varie strategie concrete: `Nearest`, `Cycle`, `LeastWorkload` e `RandomSelector`.
 
 ### Tile
 
@@ -490,27 +490,27 @@ In questo modo, avendo $ n $ `CollisionHandler` e $ m $ `SelectionPolicy`, è po
 **Problema**: La griglia deve modellare celle con proprietà eterogenee, combinabili in modo flessibile ed estendibile.
 
 \
-**Soluzione**: Seguendo il principio di *segregazione delle interfacce*, la gerarchia è definita dal trait `Tile` con i mixin `Walkable` e `Interactable`. Le tipologie concrete (`Floor`, `Shelf`, `LoadingBay`) combinano solo i tratti necessari secondo la propria semantica di dominio.
+**Soluzione**: Seguendo il principio di *segregazione delle interfacce* (Figura .ref {tile_structure}), la gerarchia è definita dal trait `Tile` con i mixin `Walkable` e `Interactable`. Le tipologie concrete (`Floor`, `Shelf`, `LoadingBay`) combinano solo i tratti necessari secondo la propria semantica di dominio.
 
-![tile_structure](diagrams/tile-1.svg "Rappresentazione UML dell'applicazione del principio *Interface Segregation* per la struttura delle celle.")
+![tile_structure](diagrams/tile-1.svg "Rappresentazione UML dell'applicazione del principio *Interface Segregation* per la struttura delle celle."){#tile_structure}
 
 ### Robot
 
 #### Decorazione delle funzionalità
-![robot_structure_1](diagrams/robot-1.svg "Rappresentazione UML dell'applicazione dell'idioma *Stackable Traits* per la decorazione delle funzionalità.")
+![robot_structure_1](diagrams/robot-1.svg "Rappresentazione UML dell'applicazione dell'idioma *Stackable Traits* per la decorazione delle funzionalità."){#robot_structure_1}
 
 **Problema**: Variare il comportamento su aspetti ortogonali senza esplosione combinatoria di sottoclassi.
 
 \
-**Soluzione**: Con intento analogo al pattern *Decorator* ma con composizione statica, i tratti `Pace` e `Queued` estendono `Robot` e ne decorano i metodi (`follow`, `accept`, `release`) tramite `abstract override`, combinati per mixin (`new Drone with Queued with Pace`).
+**Soluzione**: Con intento analogo al pattern *Decorator* ma con composizione statica (Figura .ref {robot_structure_1}), i tratti `Pace` e `Queued` estendono `Robot` e ne decorano i metodi (`follow`, `accept`, `release`) tramite `abstract override`, combinati per mixin (`new Drone with Queued with Pace`).
 
 #### Fattorizzazione della logica comune
-![robot_structure_2](diagrams/robot-2.svg "Rappresentazione UML dell'applicazione del pattern *Template Method* per la fattorizzazione della logica comune.")
+![robot_structure_2](diagrams/robot-2.svg "Rappresentazione UML dell'applicazione del pattern *Template Method* per la fattorizzazione della logica comune."){#robot_structure_2}
 
 **Problema**: Tipologie distinte condividono movimento, avanzamento temporale e transizioni di stato, senza duplicazione della logica.
 
 \
-**Soluzione**: Seguendo il pattern *Template Method*, la classe astratta `BaseRobot` centralizza navigazione e stato interno, mentre le sottoclassi concrete forniscono solo la logica specifica della propria natura.
+**Soluzione**: Seguendo il pattern *Template Method* (Figura .ref {robot_structure_2}), la classe astratta `BaseRobot` centralizza navigazione e stato interno, mentre le sottoclassi concrete forniscono solo la logica specifica della propria natura.
 
 <!-- Chapter: Sviluppo  -->
 .align {end} 
